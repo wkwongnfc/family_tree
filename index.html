@@ -2,667 +2,601 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我的家族树互动游戏</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        html {
-            font-size: 110%; 
+        /* ================= 视觉样式 (CSS) ================= */
+        * { box-sizing: border-box; user-select: none; touch-action: manipulation; }
+        body {
+            /* 楷体字体族 */
+            font-family: 'KaiTi', '楷体', 'STKaiti', '华文楷体', 'Comic Sans MS', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background-color: #E8F8F5; margin: 0; padding: 0; display: flex; flex-direction: column;
+            height: 100vh; overflow: hidden;
         }
-        body { 
-            font-family: 'KaiTi', 'SimSun', sans-serif; 
-            background-color: #f0f9ff; /* Fallback color */
-            /* Updated background image URL */
-            background-image: url('https://images.pexels.com/photos/772478/pexels-photo-772478.jpeg');
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-position: center center;
-            background-attachment: fixed;
+        
+        /* 强制所有按钮和输入框继承页面的楷体字体 */
+        button, input { font-family: inherit; }
+
+        /* 顶部导航栏 */
+        .nav-bar {
+            background-color: #A9DFBF; padding: 10px; display: flex;
+            justify-content: space-around; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 100;
+            flex-wrap: wrap; gap: 5px;
         }
-        .option-card { border: 2px solid #eee; transition: transform 0.2s; }
-        .option-card:hover { transform: scale(1.05); }
-        .option-card.selected { border-color: #34D399; background-color: #A7F3D0; }
-        .bar { background-color: #60A5FA; transition: height 0.5s ease-out; }
-        .dot { width: 1.25rem; height: 1.25rem; background-color: #FBBF24; border-radius: 50%; margin: 0.3125rem; cursor: pointer; display: inline-block; }
-        .modal { display: none; }
-        .modal.active { display: flex; }
-        .photo-booth video, .photo-booth canvas, .photo-booth img { max-width: 100%; border-radius: 8px; }
-        .btn {
-            padding: 0.625rem 1.25rem; 
-            border-radius: 8px;
-            font-size: 1.1rem; 
-            cursor: pointer;
-            transition: background-color 0.3s;
-            border: none;
+        .nav-btn {
+            font-size: 18px; font-weight: bold; padding: 6px 14px;
+            border: 3px solid white; border-radius: 20px; background-color: white;
+            color: #27AE60; cursor: pointer; transition: transform 0.2s;
+            box-shadow: 0 4px 0px #27AE60;
         }
-        .btn-primary { background-color: #3B82F6; color: white; }
-        .btn-primary:hover { background-color: #2563EB; }
-        .btn-secondary { background-color: #6B7280; color: white; }
-        .btn-secondary:hover { background-color: #4B5563; }
-        .btn-green { background-color: #10B981; color: white; }
-        .btn-green:hover { background-color: #059669; }
-        .btn-red { background-color: #EF4444; color: white; }
-        .btn-red:hover { background-color: #DC2626; }
-        .hidden { display: none; }
-        input[type="text"], input[type="file"] {
-            border: 1px solid #D1D5DB;
-            padding: 0.5rem; 
-            border-radius: 6px;
-            margin-top: 0.25rem; 
-            width: calc(100% - 1.125rem); 
+        .nav-btn:active { transform: translateY(4px); box-shadow: none; }
+        .nav-btn.active { background-color: #27AE60; color: white; border-color: #27AE60; }
+        
+        /* 背景音乐按钮的专属颜色 */
+        .bgm-btn { margin-left: auto; background-color: #F1C40F; border-color: #F1C40F; color: white; box-shadow: 0 4px 0px #D4AC0D; }
+        .bgm-btn.active { background-color: #E67E22; border-color: #E67E22; box-shadow: 0 4px 0px #D35400; }
+
+        /* 页面容器 */
+        .page { flex: 1; display: none; padding: 10px; overflow-y: auto; overflow-x: auto; text-align: center; position: relative; }
+        .page.active { display: block; }
+        h2 { color: #D35400; font-size: 24px; margin: 10px 0; text-shadow: 2px 2px 0px white;}
+
+        /* --- 核心：树状图画布与网格 --- */
+        .tree-canvas {
+            position: relative; width: 100%; min-width: 1100px; min-height: 520px;
+            display: flex; flex-direction: column; align-items: center; padding-top: 20px;
         }
-        input[type="file"] { width: auto; } /* Adjust file input width */
-        label { 
-            font-size: 0.9rem; 
-            color: #374151; 
+        .tree-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        
+        /* 行间距与组间距 */
+        .tree-row { display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 100px; z-index: 10; } 
+        .tree-group { display: flex; justify-content: center; align-items: center; gap: 20px; margin: 0 10px; min-height: 80px; }
+        .tree-spacer { width: 50px; } 
+
+        @keyframes popIn { 0% { transform: scale(0.1); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+
+        /* --- 横向大卡片样式 --- */
+        .item-card {
+            display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
+            width: 150px; height: 80px; padding: 10px; gap: 10px;
+            background-color: white; border-radius: 20px; border: 4px solid #F39C12;
+            box-shadow: 0 6px 10px rgba(0,0,0,0.1); z-index: 10; font-size: 18px; font-weight: bold; color: #333; position: relative;
+            transition: transform 0.3s ease;
         }
-        #page1, #page2 {
-            background-color: rgba(255, 255, 255, 0.92); 
+        
+        /* 头像容器 */
+        .emoji-pic { 
+            width: 55px; height: 55px; pointer-events: none; display: flex; justify-content: center; align-items: center; flex-shrink: 0;
         }
-        .added-option-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.375rem;
-            background-color: #f9fafb;
+        .pic-wrapper { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; border-radius: 50%; overflow: hidden; }
+        .custom-img { width: 100%; height: 100%; object-fit: cover; border: 2px solid #EEE; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .fallback-emoji { font-size: 45px; }
+
+        /* 右侧文字与按钮容器 */
+        .card-right { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 4px; }
+        
+        .play-btn {
+            background-color: #E67E22; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 14px; cursor: pointer;
+            box-shadow: 0 2px 0px #D35400; display: flex; align-items: center; justify-content: center; z-index: 20;
         }
+        .play-btn:active { transform: translateY(2px); box-shadow: none; }
+
+        /* --- 勾勾图标与已点击样式 --- */
+        .check-mark {
+            position: absolute; top: -10px; right: -10px; width: 28px; height: 28px;
+            background-color: #2ECC71; color: white; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 16px; font-weight: bold; border: 3px solid white;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2); opacity: 0; transform: scale(0);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 30;
+        }
+        .item-card.listened { border-color: #2ECC71; }
+        .item-card.listened .check-mark { opacity: 1; transform: scale(1); }
+
+        /* --- 闪卡翻转 --- */
+        .flashcard { perspective: 1000px; width: 150px; height: 80px; z-index: 10; }
+        .flashcard-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; cursor: pointer; }
+        .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+        .flashcard-front, .flashcard-back {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 20px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 6px 10px rgba(0,0,0,0.1); border: 4px solid #F39C12; font-weight: bold;
+        }
+        .flashcard-front { background-color: #FEF9E7; }
+        .flashcard-back { background-color: #E8F8F5; transform: rotateY(180deg); font-size: 22px; }
+
+        /* --- 第3页字幕框 --- */
+        .subtitle-box {
+            position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 15px;
+            background-color: rgba(255, 255, 255, 0.95); border: 4px solid #2ECC71;
+            color: #27AE60; padding: 15px 35px; border-radius: 30px;
+            font-size: 28px; font-weight: bold; box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+            white-space: nowrap; letter-spacing: 2px;
+        }
+        .subtitle-box.show { opacity: 1; }
+
+        /* --- 第四页：自由画板 --- */
+        #pg4.active { display: flex; flex-direction: column; }
+        #pg4-workspace { display: flex; flex-direction: row; gap: 15px; flex: 1; width: 100%; margin-top: 10px; min-height: 0; position: relative; }
+        #canvas-pg4-container {
+            flex: 1; height: 100%; min-height: unset; background-color: #FAFAFA; border: 4px solid #2ECC71; border-radius: 20px; 
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05); padding: 0; overflow: auto; position: relative;
+        }
+        #canvas-pg4 {
+            width: 3000px; height: 3000px; background-image: radial-gradient(#BDC3C7 2px, transparent 2px);
+            background-size: 30px 30px; position: relative; transform-origin: top left; transition: transform 0.2s ease-out;
+        }
+        .zoom-controls {
+            position: absolute; top: 15px; right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 10px;
+            background: rgba(255,255,255,0.9); padding: 10px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 2px solid #E5E7EB;
+        }
+        .zoom-controls button {
+            font-size: 16px; padding: 8px 12px; cursor: pointer; border: 2px solid #2ECC71; background: white; border-radius: 10px; 
+            font-weight: bold; color: #27AE60; box-shadow: 0 3px 0 #2ECC71; transition: all 0.1s;
+        }
+        .zoom-controls button:active { transform: translateY(3px); box-shadow: none; }
+        .zoom-controls .reset-btn { border-color: #E74C3C; color: #E74C3C; box-shadow: 0 3px 0 #E74C3C; margin-top: 5px; border-top: 2px dashed #CCC; padding-top: 10px; }
+        .zoom-controls .save-btn { border-color: #3498DB; color: #3498DB; box-shadow: 0 3px 0 #3498DB; margin-top: 5px; }
+        
+        #pg4-drag-area {
+            background-color: #FCF3CF; padding: 15px 5px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+            width: 170px; border: 4px dashed #F1C40F; overflow-y: auto; flex-shrink: 0;
+        }
+        .draggable { touch-action: none; cursor: grab; z-index: 100; border-color: #3498DB; }
+
+        #msg-box { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: white; padding: 15px 30px; border-radius: 20px; font-size: 24px; display: none; z-index: 9999; text-align: center; }
+        #loader { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; }
+        .spinner { border: 8px solid #f3f3f3; border-top: 8px solid #2ECC71; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-4">
+<body>
 
-    <div id="page1" class="w-full max-w-3xl bg-white p-6 rounded-lg shadow-xl">
-        <div id="teacherSetup" class="mb-8">
-            <h2 class="text-2xl font-semibold text-center text-blue-600 mb-6">老师设置选项</h2>
+    <div id="loader"><div class="spinner"></div><h2 style="color:#2ECC71; margin-top:20px;">正在加载游戏...</h2></div>
 
-            <div class="new-option-input-area p-4 border border-gray-300 rounded-lg bg-white/80 mb-6 space-y-4 shadow">
-                <div>
-                    <label for="newOptionText" class="block text-sm font-medium text-gray-700">输入选项文字：</label>
-                    <input type="text" id="newOptionText" placeholder="例如：小猫" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                </div>
-                <div class="flex flex-col sm:flex-row sm:items-end sm:space-x-4">
-                    <div class="flex-grow">
-                        <label for="newOptionImageFile" class="block text-sm font-medium text-gray-700">选择图片 (可选)：</label>
-                        <input type="file" id="newOptionImageFile" accept="image/*" class="mt-1 block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                    </div>
-                    <img id="newOptionImagePreview" src="https://placehold.co/80x80/E2E8F0/94A3B8?text=预览" alt="图片预览" class="mt-2 sm:mt-0 max-h-20 h-20 w-20 object-contain rounded border bg-gray-50"/>
-                </div>
-                <button id="addCurrentOptionBtn" class="btn btn-primary w-full">添加选项</button>
-            </div>
-
-            <h3 class="text-lg font-medium text-gray-800 mb-2">已添加的选项 ( <span id="currentOptionCountText">0</span> / <span id="maxOptionCountText">8</span> ):</h3>
-            <div id="addedOptionsDisplayArea" class="space-y-2 mb-4 max-h-48 overflow-y-auto p-3 border rounded-md bg-gray-50 shadow-inner">
-                <p class="text-gray-500 text-center italic">暂无已添加选项</p>
-            </div>
-        </div>
-
-        <div id="studentVoting" class="mb-8">
-            <h2 class="text-2xl font-semibold text-center text-green-600 mb-4">小朋友投票啦！</h2>
-            
-            <div class="photo-booth text-center mb-6 p-4 border-2 border-dashed border-gray-300 rounded-lg bg-white/70">
-                <p class="text-gray-700 mb-2">先拍一张可爱的头像吧！</p>
-                <video id="webcam" autoplay playsinline class="mx-auto mb-2 bg-gray-200 hidden"></video> <canvas id="photoCanvas" class="hidden"></canvas>
-                <img id="capturedPhotoPreview" src="https://placehold.co/200x150/E2E8F0/94A3B8?text=我的头像" alt="我的头像" class="mx-auto mb-2 rounded-lg shadow"/>
-                <div class="space-x-2">
-                    <button id="startWebcamBtn" class="btn btn-secondary">打开摄像头</button>
-                    <button id="capturePhotoBtn" class="btn btn-green" disabled>拍照！</button>
-                    <button id="retakePhotoBtn" class="btn btn-secondary hidden">重拍一张</button>
-                </div>
-                <p id="webcamError" class="text-red-500 mt-2"></p>
-            </div>
-
-            <h3 class="text-xl font-medium text-center text-gray-700 mb-3">请选择你喜欢的：</h3>
-            <div id="votingOptionsDisplay" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                <p class="col-span-full text-center text-gray-500">老师还没有设置好选项哦！</p>
-            </div>
-            <p id="voteMessage" class="text-center mt-4 font-semibold"></p>
-        </div>
-
-        <button id="showResultsBtn" class="btn btn-primary w-full">显示成绩</button>
+    <div class="nav-bar">
+        <button class="nav-btn active" onclick="window.switchPage('pg1')">1. 概览图</button>
+        <button class="nav-btn" onclick="window.switchPage('pg2')">2. 闪卡树</button>
+        <button class="nav-btn" onclick="window.switchPage('pg3')">3. 树枝找</button>
+        <button class="nav-btn" onclick="window.switchPage('pg4')">4. 拼建树</button>
+        <!-- 新增的背景音乐按钮 -->
+        <button class="nav-btn bgm-btn" onclick="window.toggleBGM()">🎵 音乐关</button>
     </div>
 
-    <div id="page2" class="w-full max-w-3xl bg-white p-6 rounded-lg shadow-xl hidden">
-        <h2 class="text-3xl font-bold text-center text-purple-600 mb-6">投票结果</h2>
-        <div id="resultsChartContainer" class="flex items-end justify-around h-80 border-b-2 border-gray-300 p-4 bg-gray-50/80 rounded-lg"> </div>
-        <div class="mt-8 text-center">
-            <button id="restartBtn" class="btn btn-red w-full sm:w-auto">重新开始</button>
+    <div id="pg1" class="page active"><h2>这是我的家族树</h2><div id="canvas-pg1" class="tree-canvas"></div></div>
+    <div id="pg2" class="page"><h2>点一卡片，认字听音</h2><div id="canvas-pg2" class="tree-canvas"></div></div>
+    <div id="pg3" class="page">
+        <h2>依次点击卡片，召唤全家</h2>
+        <div id="canvas-pg3" class="tree-canvas"></div>
+    </div>
+
+    <div id="pg4" class="page">
+        <div class="cam-controls" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 5px;">
+            <video id="video-element" autoplay playsinline style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #E74C3C; object-fit: cover; background: #ddd;"></video>
+            <button onclick="window.takePhoto()" style="font-size:16px; padding:6px 15px; border-radius:10px; border:none; background:#E74C3C; color:white; font-weight:bold; cursor:pointer; box-shadow: 0 4px 0px #C0392B;">📸 拍头像</button>
+            <span style="color:#555; font-size:14px; font-weight:bold;">左侧拖入画板，靠近自动连线！</span>
+        </div>
+        <div id="pg4-workspace">
+            <div id="pg4-drag-area"></div>
+            <div id="canvas-pg4-container">
+                <div id="canvas-pg4" class="tree-canvas"></div>
+            </div>
+            <div class="zoom-controls">
+                <button onclick="window.zoomPg4(0.15)">➕ 放大</button>
+                <button onclick="window.zoomPg4(-0.15)">➖ 缩小</button>
+                <button class="reset-btn" onclick="window.resetPg4()">🔄 重设</button>
+                <button class="save-btn" onclick="window.saveTreeImage()">💾 保存图片</button>
+            </div>
         </div>
     </div>
 
-    <div id="voteDetailsModal" class="modal fixed inset-0 bg-black bg-opacity-60 items-center justify-center p-4 z-50">
-        <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-            <h3 id="modalOptionText" class="text-xl font-semibold mb-3 text-center"></h3>
-            <img id="modalOptionImage" src="" alt="选项图片" class="mx-auto mb-3 max-h-40 rounded-md hidden"/>
-            <p id="modalVoteCount" class="text-lg mb-3 text-center"></p>
-            <div id="modalDotsContainer" class="flex flex-wrap justify-center mb-4">
-            </div>
-            <div id="modalVoterImageContainer" class="text-center hidden">
-                <img id="modalVoterImage" src="" alt="投票者头像" class="mx-auto max-h-48 rounded-lg shadow-md"/>
-                <button id="backToDotsBtn" class="btn btn-secondary mt-3">返回看圆点</button>
-            </div>
-            <button id="closeModalBtn" class="btn btn-primary w-full mt-4">关闭</button>
-        </div>
-    </div>
+    <div id="msg-box">提示信息</div>
 
-<script>
-    // --- DOM Elements ---
-    const page1 = document.getElementById('page1');
-    const page2 = document.getElementById('page2');
-    
-    // Teacher Setup - New Structure
-    const newOptionText = document.getElementById('newOptionText');
-    const newOptionImageFile = document.getElementById('newOptionImageFile');
-    const newOptionImagePreview = document.getElementById('newOptionImagePreview');
-    const addCurrentOptionBtn = document.getElementById('addCurrentOptionBtn');
-    const addedOptionsDisplayArea = document.getElementById('addedOptionsDisplayArea');
-    const currentOptionCountText = document.getElementById('currentOptionCountText');
-    const maxOptionCountText = document.getElementById('maxOptionCountText');
+    <script>
+        // ================= 核心数据区 (硬编码 src 路径) =================
+        const familyData = {
+            "爷爷": { emoji: "👴", group: "patGP", generalImg: "img/爷爷.png", generalAudio: "audio/爷爷.mp3", pg3Img: "img_pg3/爷爷.png", pg3Audio: "audio_pg3/爷爷.mp3" }, 
+            "奶奶": { emoji: "👵", group: "patGP", generalImg: "img/奶奶.png", generalAudio: "audio/奶奶.mp3", pg3Img: "img_pg3/奶奶.png", pg3Audio: "audio_pg3/奶奶.mp3" },
+            "外公": { emoji: "👴", group: "matGP", generalImg: "img/外公.png", generalAudio: "audio/外公.mp3", pg3Img: "img_pg3/外公.png", pg3Audio: "audio_pg3/外公.mp3" }, 
+            "外婆": { emoji: "👵", group: "matGP", generalImg: "img/外婆.png", generalAudio: "audio/外婆.mp3", pg3Img: "img_pg3/外婆.png", pg3Audio: "audio_pg3/外婆.mp3" },
+            "伯伯": { emoji: "👨", group: "patAunts", generalImg: "img/伯伯.png", generalAudio: "audio/伯伯.mp3", pg3Img: "img_pg3/伯伯.png", pg3Audio: "audio_pg3/伯伯.mp3" }, 
+            "叔叔": { emoji: "👨", group: "patAunts", generalImg: "img/叔叔.png", generalAudio: "audio/叔叔.mp3", pg3Img: "img_pg3/叔叔.png", pg3Audio: "audio_pg3/叔叔.mp3" }, 
+            "姑姑": { emoji: "👩", group: "patAunts", generalImg: "img/姑姑.png", generalAudio: "audio/姑姑.mp3", pg3Img: "img_pg3/姑姑.png", pg3Audio: "audio_pg3/姑姑.mp3" },
+            "爸爸": { emoji: "👨", group: "parents", generalImg: "img/爸爸.png", generalAudio: "audio/爸爸.mp3", pg3Img: "img_pg3/爸爸.png", pg3Audio: "audio_pg3/爸爸.mp3" }, 
+            "妈妈": { emoji: "👩", group: "parents", generalImg: "img/妈妈.png", generalAudio: "audio/妈妈.mp3", pg3Img: "img_pg3/妈妈.png", pg3Audio: "audio_pg3/妈妈.mp3" },
+            "舅舅": { emoji: "👨", group: "matAunts", generalImg: "img/舅舅.png", generalAudio: "audio/舅舅.mp3", pg3Img: "img_pg3/舅舅.png", pg3Audio: "audio_pg3/舅舅.mp3" }, 
+            "阿姨": { emoji: "👩", group: "matAunts", generalImg: "img/阿姨.png", generalAudio: "audio/阿姨.mp3", pg3Img: "img_pg3/阿姨.png", pg3Audio: "audio_pg3/阿姨.mp3" },
+            "哥哥": { emoji: "👦", group: "kids", generalImg: "img/哥哥.png", generalAudio: "audio/哥哥.mp3", pg3Img: "img_pg3/哥哥.png", pg3Audio: "audio_pg3/哥哥.mp3" }, 
+            "姐姐": { emoji: "👧", group: "kids", generalImg: "img/姐姐.png", generalAudio: "audio/姐姐.mp3", pg3Img: "img_pg3/姐姐.png", pg3Audio: "audio_pg3/姐姐.mp3" }, 
+            "我":   { emoji: "🧒", group: "kids", generalImg: "img/我.png",   generalAudio: "audio/我.mp3",   pg3Img: "img_pg3/我.png",   pg3Audio: "audio_pg3/我.mp3" },
+            "弟弟": { emoji: "👶", group: "kids", generalImg: "img/弟弟.png", generalAudio: "audio/弟弟.mp3", pg3Img: "img_pg3/弟弟.png", pg3Audio: "audio_pg3/弟弟.mp3" }, 
+            "妹妹": { emoji: "👧", group: "kids", generalImg: "img/妹妹.png", generalAudio: "audio/妹妹.mp3", pg3Img: "img_pg3/妹妹.png", pg3Audio: "audio_pg3/妹妹.mp3" }
+        };
 
+        const systemAudioData = {
+            "sys_connect": { label: "连线成功音", defaultText: "连起来啦", audioPath: "audio_sys/sys_connect.mp3" },
+            "sys_disconnect": { label: "断开连线音", defaultText: "断开了", audioPath: "audio_sys/sys_disconnect.mp3" },
+            "sys_photo": { label: "拍照完成音", defaultText: "拍照成功", audioPath: "audio_sys/sys_photo.mp3" },
+            "sys_save": { label: "保存图片提示", defaultText: "正在生成图片", audioPath: "audio_sys/sys_save.mp3" },
+            "sys_error": { label: "超出边界声", defaultText: "咻", audioPath: "audio_sys/sys_error.mp3" },
+            "sys_bgm": { label: "背景音乐", defaultText: "无", audioPath: "audio_sys/bgm.mp3" } // 新增背景音乐路径
+        };
 
-    // Student Voting
-    const webcam = document.getElementById('webcam');
-    const photoCanvas = document.getElementById('photoCanvas');
-    const capturePhotoBtn = document.getElementById('capturePhotoBtn');
-    const startWebcamBtn = document.getElementById('startWebcamBtn');
-    const retakePhotoBtn = document.getElementById('retakePhotoBtn');
-    const capturedPhotoPreview = document.getElementById('capturedPhotoPreview');
-    const webcamError = document.getElementById('webcamError');
-    const votingOptionsDisplay = document.getElementById('votingOptionsDisplay');
-    const voteMessage = document.getElementById('voteMessage');
+        const pg3Subtitles = {
+            "爷爷": "爸爸的爸爸叫爷爷",
+            "奶奶": "爸爸的妈妈叫奶奶",
+            "伯伯": "爸爸的哥哥叫伯伯",
+            "叔叔": "爸爸的弟弟叫叔叔",
+            "姑姑": "爸爸的姐妹叫姑姑",
+            "外公": "妈妈的爸爸叫外公",
+            "外婆": "妈妈的妈妈叫外婆",
+            "舅舅": "妈妈的兄弟叫舅舅",
+            "阿姨": "妈妈的姐妹叫阿姨",
+            "哥哥": "我的哥哥陪我玩",
+            "姐姐": "我的姐姐笑容甜",
+            "弟弟": "我的弟弟跑得快",
+            "妹妹": "我的妹妹最可爱"
+        };
 
-    // Page Navigation
-    const showResultsBtn = document.getElementById('showResultsBtn');
-    const restartBtn = document.getElementById('restartBtn');
+        let pg4Links = []; let pg4Zoom = 1;
+        window.pg3Clicked = new Set(); 
+        window.subtitleTimeout = null;
+        window.bgmAudio = null; // BGM 控制对象
 
-    // Results Page
-    const resultsChartContainer = document.getElementById('resultsChartContainer');
-
-    // Modal
-    const voteDetailsModal = document.getElementById('voteDetailsModal');
-    const modalOptionText = document.getElementById('modalOptionText');
-    const modalOptionImage = document.getElementById('modalOptionImage');
-    const modalVoteCount = document.getElementById('modalVoteCount');
-    const modalDotsContainer = document.getElementById('modalDotsContainer');
-    const modalVoterImageContainer = document.getElementById('modalVoterImageContainer');
-    const modalVoterImage = document.getElementById('modalVoterImage');
-    const backToDotsBtn = document.getElementById('backToDotsBtn');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-
-    // --- State ---
-    let optionsData = []; // { id: uniqueId, text: '', imageSrc: null, votes: 0, voters: [] }
-    let currentStudentImage = null;
-    let webcamStream = null;
-    const MAX_OPTIONS = 8;
-    let tempImageForNewOption = null; 
-
-    // --- Initialization ---
-    function init() {
-        page1.classList.remove('hidden');
-        page2.classList.add('hidden');
-        voteDetailsModal.classList.remove('active');
-        maxOptionCountText.textContent = MAX_OPTIONS;
-        updateAddCurrentOptionButtonState();
-        renderAddedOptionsPreview(); 
-        renderVotingOptionsDisplay(); 
-        webcam.classList.add('hidden');
-    }
-
-    // --- Teacher Setup Logic (New Structure) ---
-    newOptionImageFile.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                newOptionImagePreview.src = e.target.result;
-                tempImageForNewOption = e.target.result; 
+        // ================= 背景音乐控制 =================
+        window.toggleBGM = () => {
+            let btn = document.querySelector('.bgm-btn');
+            if (!window.bgmAudio) {
+                window.bgmAudio = new Audio(systemAudioData['sys_bgm'].audioPath);
+                window.bgmAudio.loop = true; // 循环播放
             }
-            reader.readAsDataURL(file);
-        } else {
-            newOptionImagePreview.src = "https://placehold.co/80x80/E2E8F0/94A3B8?text=预览";
-            tempImageForNewOption = null;
-        }
-    });
-
-    addCurrentOptionBtn.addEventListener('click', () => {
-        const text = newOptionText.value.trim();
-        if (!text) {
-            showCustomMessage("选项文字不能为空哦！", "warning");
-            newOptionText.focus();
-            return;
-        }
-        if (optionsData.length >= MAX_OPTIONS) {
-            showCustomMessage(`最多只能添加 ${MAX_OPTIONS} 个选项哦！`, "warning");
-            return;
-        }
-
-        const newId = Date.now().toString();
-        optionsData.push({
-            id: newId,
-            text: text,
-            imageSrc: tempImageForNewOption, 
-            votes: 0,
-            voters: []
-        });
-
-        newOptionText.value = '';
-        newOptionImageFile.value = ''; 
-        newOptionImagePreview.src = "https://placehold.co/80x80/E2E8F0/94A3B8?text=预览";
-        tempImageForNewOption = null;
-
-        renderAddedOptionsPreview();
-        renderVotingOptionsDisplay();
-        updateAddCurrentOptionButtonState();
-        newOptionText.focus();
-    });
-
-    function renderAddedOptionsPreview() {
-        addedOptionsDisplayArea.innerHTML = ''; 
-        if (optionsData.length === 0) {
-            addedOptionsDisplayArea.innerHTML = '<p class="text-gray-500 text-center italic">暂无已添加选项</p>';
-        } else {
-            optionsData.forEach(option => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'added-option-item';
-                
-                const optionTextSpan = document.createElement('span');
-                optionTextSpan.textContent = option.text.length > 20 ? option.text.substring(0, 18) + '...' : option.text;
-                optionTextSpan.title = option.text;
-                optionTextSpan.className = 'text-sm text-gray-700 flex-grow';
-
-                if(option.imageSrc){
-                    const optionImgPreview = document.createElement('img');
-                    optionImgPreview.src = option.imageSrc;
-                    optionImgPreview.alt = '预览';
-                    optionImgPreview.className = 'w-8 h-8 object-contain rounded mr-2 border';
-                    itemDiv.appendChild(optionImgPreview);
-                }
-
-                itemDiv.appendChild(optionTextSpan);
-
-                const removeBtn = document.createElement('button');
-                removeBtn.textContent = '删除';
-                removeBtn.className = 'btn btn-red btn-sm text-xs px-2 py-1';
-                removeBtn.onclick = () => removeAddedOption(option.id);
-                
-                itemDiv.appendChild(removeBtn);
-                addedOptionsDisplayArea.appendChild(itemDiv);
-            });
-        }
-        currentOptionCountText.textContent = optionsData.length;
-    }
-
-    function removeAddedOption(idToRemove) {
-        optionsData = optionsData.filter(opt => opt.id !== idToRemove);
-        renderAddedOptionsPreview();
-        renderVotingOptionsDisplay();
-        updateAddCurrentOptionButtonState();
-    }
-
-    function updateAddCurrentOptionButtonState() {
-        addCurrentOptionBtn.disabled = optionsData.length >= MAX_OPTIONS;
-        if (optionsData.length >= MAX_OPTIONS) {
-            addCurrentOptionBtn.textContent = `已达上限 (${MAX_OPTIONS}个)`;
-        } else {
-            addCurrentOptionBtn.textContent = '添加选项';
-        }
-    }
-
-    // --- Student Webcam Logic ---
-    async function startWebcamFlow() {
-        console.log("startWebcamFlow called"); // DEBUG
-        if (webcamStream) { 
-            webcamStream.getTracks().forEach(track => track.stop());
-            webcamStream = null; 
-        }
-        try {
-            console.log("Attempting to get user media..."); // DEBUG
-            webcamStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-            console.log("User media obtained:", webcamStream); // DEBUG
-            webcam.srcObject = webcamStream;
-            webcam.onloadedmetadata = () => {
-                console.log("Webcam metadata loaded."); // DEBUG
-                webcam.play().catch(playError => { 
-                     console.error("摄像头播放错误:", playError);
-                     webcamError.textContent = `摄像头可以访问，但播放失败: ${playError.name}. 请尝试刷新页面。`;
+            if (window.bgmAudio.paused) {
+                window.bgmAudio.play().then(() => {
+                    btn.innerText = "🎵 音乐开";
+                    btn.classList.add('active');
+                }).catch(e => {
+                    window.showMsg("无法播放背景音乐，请检查 audio_sys/bgm.mp3 文件是否已上传。");
                 });
-                webcam.classList.remove('hidden'); 
-                capturedPhotoPreview.classList.add('hidden'); 
-                capturePhotoBtn.disabled = false;
-                startWebcamBtn.classList.add('hidden');
-                retakePhotoBtn.classList.remove('hidden');
-                webcamError.textContent = '';
-            };
-            webcam.onerror = (e) => { 
-                console.error("摄像头元素错误:", e);
-                webcamError.textContent = "摄像头发生未知错误。";
-                capturePhotoBtn.disabled = true;
-                startWebcamBtn.classList.remove('hidden');
-                retakePhotoBtn.classList.add('hidden');
-                capturedPhotoPreview.classList.remove('hidden'); // Show placeholder if video element errors
-            };
-
-        } catch (err) {
-            console.error("摄像头访问错误:", err);
-            let message = "哎呀，打不开摄像头哦！请检查权限。";
-            if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
-                message = "没有找到摄像头设备。";
-            } else if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-                message = "您没有允许浏览器使用摄像头。请检查浏览器权限设置。";
-            } else if (err.name === "NotReadableError" || err.name === "TrackStartError") {
-                message = "摄像头可能正在被其他应用使用，或者硬件有问题。";
             } else {
-                message = `无法访问摄像头 (${err.name})。请检查连接和权限。`;
+                window.bgmAudio.pause();
+                btn.innerText = "🎵 音乐关";
+                btn.classList.remove('active');
             }
-            webcamError.textContent = message;
-            capturePhotoBtn.disabled = true;
-            startWebcamBtn.classList.remove('hidden');
-            retakePhotoBtn.classList.add('hidden');
-            webcam.classList.add('hidden'); 
-            capturedPhotoPreview.classList.remove('hidden'); // Show placeholder if getUserMedia fails
-        }
-    }
-
-    function captureStudentPhoto() {
-        if (!webcamStream || !webcamStream.active) {
-            webcamError.textContent = "摄像头没有在工作哦！请先打开摄像头。";
-            return;
-        }
-        if (webcam.videoWidth === 0 || webcam.videoHeight === 0) {
-            webcamError.textContent = "摄像头画面还没准备好，请稍等一下再拍照。";
-            return;
-        }
-
-        photoCanvas.width = webcam.videoWidth;
-        photoCanvas.height = webcam.videoHeight;
-        const context = photoCanvas.getContext('2d');
-        context.drawImage(webcam, 0, 0, photoCanvas.width, photoCanvas.height);
-        
-        currentStudentImage = photoCanvas.toDataURL('image/png');
-        capturedPhotoPreview.src = currentStudentImage;
-        
-        webcam.classList.add('hidden');
-        capturedPhotoPreview.classList.remove('hidden');
-        capturePhotoBtn.classList.add('hidden'); 
-        retakePhotoBtn.classList.remove('hidden'); 
-
-        if (webcamStream) {
-            webcamStream.getTracks().forEach(track => track.stop());
-            webcamStream = null; 
-        }
-        voteMessage.textContent = '头像拍好啦！现在去选你喜欢的吧！';
-        voteMessage.className = 'text-center mt-4 font-semibold text-green-600';
-    }
-
-    function retakeStudentPhoto() {
-        currentStudentImage = null;
-        capturedPhotoPreview.src = "https://placehold.co/200x150/E2E8F0/94A3B8?text=我的头像";
-        // Buttons and webcam visibility will be handled by startWebcamFlow
-        webcamError.textContent = '正在准备摄像头...';
-        startWebcamBtn.classList.add('hidden');   
-        capturePhotoBtn.classList.add('hidden');  
-        capturePhotoBtn.disabled = true;
-        retakePhotoBtn.classList.add('hidden');   
-        voteMessage.textContent = '';
-        startWebcamFlow(); 
-    }
-
-
-    // --- Voting Logic ---
-    function renderVotingOptionsDisplay() {
-        votingOptionsDisplay.innerHTML = '';
-        const validOptions = optionsData.filter(opt => opt.text.trim() !== '');
-
-        if (validOptions.length === 0) {
-            votingOptionsDisplay.innerHTML = '<p class="col-span-full text-center text-gray-500">老师还没有设置好选项哦！</p>';
-            return;
-        }
-
-        validOptions.forEach((option) => {
-            const card = document.createElement('div');
-            card.className = 'option-card p-3 rounded-lg shadow cursor-pointer text-center bg-white';
-            card.dataset.optionId = option.id;
-            card.onclick = () => handleVote(option.id);
-
-            const img = document.createElement('img');
-            img.src = option.imageSrc || "https://placehold.co/150x100/E0E7FF/4338CA?text=选项";
-            img.alt = option.text;
-            img.className = 'w-full h-24 object-contain rounded-md mb-2 mx-auto'; 
-            img.onerror = function() { this.src = "https://placehold.co/150x100/FECACA/7F1D1D?text=图片加载失败"; }
-
-            const text = document.createElement('p');
-            text.textContent = option.text;
-            text.className = 'font-medium text-gray-700 truncate';
-
-            card.appendChild(img);
-            card.appendChild(text);
-            votingOptionsDisplay.appendChild(card);
-        });
-    }
-
-    function handleVote(optionId) {
-        if (!currentStudentImage) {
-            voteMessage.textContent = "请先拍照，才能投票哦！";
-            voteMessage.className = 'text-center mt-4 font-semibold text-red-500';
-            window.scrollTo({ top: studentVoting.offsetTop - 20, behavior: 'smooth' });
-            return;
-        }
-
-        const selectedOption = optionsData.find(opt => opt.id === optionId);
-        if (selectedOption) {
-            selectedOption.votes++;
-            selectedOption.voters.push(currentStudentImage);
-            
-            voteMessage.textContent = `你投给了 "${selectedOption.text}"！真棒！`;
-            voteMessage.className = 'text-center mt-4 font-semibold text-green-600';
-
-            document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
-            votingOptionsDisplay.querySelector(`[data-option-id="${optionId}"]`).classList.add('selected');
-
-            currentStudentImage = null; 
-            capturedPhotoPreview.src = "https://placehold.co/200x150/E2E8F0/94A3B8?text=我的头像"; 
-            startWebcamBtn.classList.remove('hidden'); 
-            capturePhotoBtn.disabled = true; 
-            capturePhotoBtn.classList.remove('hidden'); 
-            retakePhotoBtn.classList.add('hidden'); 
-            webcam.classList.add('hidden'); 
-            
-            setTimeout(() => {
-                const card = votingOptionsDisplay.querySelector(`[data-option-id="${optionId}"]`);
-                if (card) card.classList.remove('selected');
-            }, 2000);
-        }
-    }
-
-    // --- Custom Message Pop-up ---
-    function showCustomMessage(message, type = 'info') {
-        const msgBox = document.createElement('div');
-        let bgColor = '#e0f7fa'; 
-        let textColor = '#006064';
-        if (type === 'warning') { bgColor = '#fff3cd'; textColor = '#856404'; }
-        if (type === 'error') { bgColor = '#f8d7da'; textColor = '#721c24'; }
-        
-        msgBox.textContent = message;
-        msgBox.style.cssText = `
-            position:fixed; top:20px; left:50%; transform:translateX(-50%); 
-            background-color: ${bgColor}; color: ${textColor}; 
-            padding: 10px 20px; border-radius: 5px; z-index:1000; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-size: 0.9rem;`;
-        document.body.appendChild(msgBox);
-        setTimeout(() => msgBox.remove(), 3000);
-    }
-
-    // --- Page Navigation ---
-    showResultsBtn.addEventListener('click', () => {
-        if (optionsData.length === 0) {
-            showCustomMessage("老师还没有设置任何有效的投票选项哦！", "warning");
-            return;
-        }
-
-        page1.classList.add('hidden');
-        page2.classList.remove('hidden');
-        renderResultsChart();
-        window.scrollTo(0,0);
-    });
-
-    // Custom Confirm Dialog
-    function showCustomConfirm(message, callback) {
-        const confirmModal = document.createElement('div');
-        confirmModal.style.cssText = `
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.5); display: flex;
-            align-items: center; justify-content: center; z-index: 2000; padding: 1rem;`;
-        
-        const confirmBox = document.createElement('div');
-        confirmBox.style.cssText = `
-            background-color: white; padding: 1.5rem; border-radius: 8px; text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 300px; width: 100%;`;
-        
-        const messageP = document.createElement('p');
-        messageP.textContent = message;
-        messageP.style.marginBottom = '1rem';
-        messageP.style.fontSize = '1rem';
-
-        const yesButton = document.createElement('button');
-        yesButton.textContent = '确定';
-        yesButton.className = 'btn btn-red';
-        yesButton.style.marginRight = '0.5rem';
-
-        const noButton = document.createElement('button');
-        noButton.textContent = '取消';
-        noButton.className = 'btn btn-secondary';
-
-        yesButton.onclick = () => {
-            confirmModal.remove();
-            callback(true);
-        };
-        noButton.onclick = () => {
-            confirmModal.remove();
-            callback(false);
         };
 
-        confirmBox.appendChild(messageP);
-        confirmBox.appendChild(yesButton);
-        confirmBox.appendChild(noButton);
-        confirmModal.appendChild(confirmBox);
-        document.body.appendChild(confirmModal);
-    }
+        // ================= 图像处理与渲染 =================
+        function getPicHTML(word, pageId) {
+            let info = familyData[word];
+            let path = pageId === 'pg3' ? info.pg3Img : info.generalImg;
+            if (path) {
+                return `
+                <div class="pic-wrapper">
+                    <!-- 如果图片找不到 (onerror)，隐藏图片并显示旁边的 fallback-emoji -->
+                    <img src="${path}" class="custom-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="fallback-emoji" style="display:none;">${info.emoji}</div>
+                </div>`;
+            }
+            return `<div class="fallback-emoji">${info.emoji}</div>`;
+        }
 
-    restartBtn.addEventListener('click', () => {
-        showCustomConfirm("确定要重新开始所有投票吗？所有数据都会被清除哦！", (confirmed) => {
-            if (confirmed) {
-                optionsData = [];
-                currentStudentImage = null;
-                if (webcamStream) {
-                    webcamStream.getTracks().forEach(track => track.stop());
-                    webcamStream = null;
-                }
-                webcam.srcObject = null;
-                webcam.classList.add('hidden');
-                startWebcamBtn.classList.remove('hidden');
-                capturePhotoBtn.disabled = true;
-                capturePhotoBtn.classList.remove('hidden');
-                retakePhotoBtn.classList.add('hidden');
-                capturedPhotoPreview.src = "https://placehold.co/200x150/E2E8F0/94A3B8?text=我的头像";
-                webcamError.textContent = '';
-                voteMessage.textContent = '';
+        function buildTreeLayout(pageId, mode) {
+            const container = document.getElementById(`canvas-${pageId}`);
+            if (mode === 'puzzle') {
+                // 修复：必须增加 xmlns 命名空间，否则 html2canvas 渲染带 SVG 动态节点的画布会崩溃
+                container.innerHTML = `<svg class="tree-svg" id="svg-${pageId}" xmlns="http://www.w3.org/2000/svg"></svg>`;
+                let dragArea = document.getElementById('pg4-drag-area'); dragArea.innerHTML = '';
                 
-                newOptionText.value = '';
-                newOptionImageFile.value = '';
-                newOptionImagePreview.src = "https://placehold.co/80x80/E2E8F0/94A3B8?text=预览";
-                tempImageForNewOption = null;
-                renderAddedOptionsPreview(); 
-                updateAddCurrentOptionButtonState();
-
-                renderVotingOptionsDisplay(); 
-
-                page2.classList.add('hidden');
-                page1.classList.remove('hidden');
-                window.scrollTo(0,0);
+                const createDragHTML = (w) => `
+                    <div class="item-card draggable" data-word="${w}" onpointerdown="window.startDrag(event)">
+                        <div class="emoji-pic">${getPicHTML(w, pageId)}</div>
+                        <div class="card-right"><div class="name-label">${w}</div></div>
+                    </div>`;
+                    
+                dragArea.innerHTML += createDragHTML("我");
+                for (let word in familyData) { if (word !== "我") dragArea.innerHTML += createDragHTML(word); }
+                setTimeout(() => { let wrapper = document.getElementById('canvas-pg4-container'); if(wrapper) { wrapper.scrollLeft = 1500 - wrapper.clientWidth/2; wrapper.scrollTop = 1500 - wrapper.clientHeight/2; } }, 100);
+                return; 
             }
-        });
-    });
 
-    // --- Results Page Logic ---
-    function renderResultsChart() {
-        resultsChartContainer.innerHTML = '';
-        const maxVotes = Math.max(1, ...optionsData.map(opt => opt.votes)); 
+            // 修复：同样为其他页面增加 xmlns 命名空间
+            container.innerHTML = `
+                <svg class="tree-svg" id="svg-${pageId}" xmlns="http://www.w3.org/2000/svg"></svg>
+                <div class="tree-row generation-1"><div class="tree-group" id="${pageId}-patGP"></div><div class="tree-spacer"></div><div class="tree-group" id="${pageId}-matGP"></div></div>
+                <div class="tree-row generation-2"><div class="tree-group" id="${pageId}-patAunts"></div><div class="tree-group" id="${pageId}-parents"></div><div class="tree-group" id="${pageId}-matAunts"></div></div>
+                <div class="tree-row generation-3"><div class="tree-group" id="${pageId}-kids"></div></div>
+            `;
 
-        optionsData.forEach((option) => {
-            const barWrapper = document.createElement('div');
-            barWrapper.className = 'flex flex-col items-center h-full justify-end mx-1 sm:mx-2 flex-1';
+            for (let word in familyData) {
+                let info = familyData[word]; let groupEl = document.getElementById(`${pageId}-${info.group}`); 
+                let picHTML = getPicHTML(word, pageId);
+                let rightHTML = `<div class="card-right"><div class="name-label">${word}</div><button class="play-btn" onclick="window.playSound('${word}', event, 'person', '${pageId}')">🔊</button></div>`;
+
+                if (mode === 'normal') {
+                    groupEl.innerHTML += `<div class="item-card card" id="${pageId}-card-${word}"><div class="emoji-pic">${picHTML}</div>${rightHTML}</div>`;
+                } else if (mode === 'flashcard') {
+                    groupEl.innerHTML += `
+                        <div class="flashcard card" id="${pageId}-card-${word}" onclick="this.classList.toggle('flipped')">
+                            <div class="flashcard-inner">
+                                <div class="flashcard-front"><div class="emoji-pic">${picHTML}</div><div class="name-label" style="font-size:24px;">?</div></div>
+                                <div class="flashcard-back"><div class="name-label">${word}</div><button class="play-btn" onclick="window.playSound('${word}', event, 'person', '${pageId}')">🔊</button></div>
+                            </div>
+                        </div>`;
+                } else if (mode === 'expandable') {
+                    let isInitial = word === "我";
+                    let subtitleNode = isInitial ? `<div id="pg3-subtitle" class="subtitle-box"></div>` : '';
+                    groupEl.innerHTML += `
+                        <div class="item-card card" id="${pageId}-card-${word}" onclick="window.handlePg3Click('${word}', '${pageId}', event)" style="${isInitial ? '' : 'display:none;'} cursor:pointer;">
+                            <div class="check-mark">✓</div>
+                            <div class="emoji-pic">${picHTML}</div>
+                            ${rightHTML}
+                            ${subtitleNode}
+                        </div>`;
+                }
+            }
+        }
+
+        function refreshTrees() {
+            buildTreeLayout('pg1', 'normal'); buildTreeLayout('pg2', 'flashcard'); buildTreeLayout('pg3', 'expandable'); buildTreeLayout('pg4', 'puzzle');
+            setTimeout(() => { let activePage = document.querySelector('.page.active').id; if (activePage !== 'pg4') drawTreeLines(activePage); }, 150);
+        }
+
+        // ================= 操作与发音引擎 (含优雅降级 TTS) =================
+        window.switchPage = (pageId) => {
+            document.querySelectorAll('.page, .nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active'); 
+            let targetBtn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick').includes(pageId));
+            if(targetBtn) targetBtn.classList.add('active');
+            setTimeout(() => { if(pageId === 'pg4') window.drawPg4Lines(); else drawTreeLines(pageId); }, 150);
+        };
+
+        window.playSound = (id, e = null, type = 'system', pageId = null) => {
+            if (e) e.stopPropagation();
+            let path = ''; let fallbackText = '';
+
+            if (type === 'person') {
+                path = (pageId === 'pg3') ? familyData[id].pg3Audio : familyData[id].generalAudio;
+                fallbackText = id;
+            } else {
+                path = systemAudioData[id].audioPath;
+                fallbackText = systemAudioData[id].defaultText;
+            }
+
+            if (path) {
+                let audio = new Audio(path);
+                // 自动处理路径错误（如找不到mp3文件），播放失败则立刻启用 AI 朗读备用
+                audio.play().catch(err => { window.fallbackTTS(fallbackText); });
+                return;
+            }
+            window.fallbackTTS(fallbackText);
+        };
+
+        window.fallbackTTS = (text) => {
+            if ('speechSynthesis' in window) { let msg = new SpeechSynthesisUtterance(text); msg.lang = 'zh-CN'; msg.rate = 0.9; window.speechSynthesis.speak(msg); }
+        };
+
+        window.showMsg = (text) => {
+            let box = document.getElementById('msg-box'); box.innerText = text; box.style.display = 'block'; setTimeout(() => box.style.display = 'none', 3000);
+        };
+
+        // ================= 第3页：顺序解锁点击逻辑 =================
+        window.handlePg3Click = (word, pageId, event) => {
+            if (event.target.classList.contains('play-btn')) return; // 点按钮只发音，不解锁
+            let card = document.getElementById(`${pageId}-card-${word}`);
+            if(!card || card.style.display === 'none') return;
             
-            const bar = document.createElement('div');
-            const barHeightPercentage = (option.votes / maxVotes) * 90; 
-            bar.className = 'bar w-10 sm:w-12 md:w-16 rounded-t-md cursor-pointer hover:opacity-80'; 
-            bar.style.height = `${barHeightPercentage}%`; 
-            bar.title = `${option.text}: ${option.votes} 票`;
-            bar.onclick = () => showVoteDetails(option.id);
+            card.classList.add('listened');
+            window.pg3Clicked.add(word);
+            window.playSound(word, null, 'person', pageId);
 
-            const label = document.createElement('p');
-            label.textContent = option.text.length > 6 ? option.text.substring(0,5) + '...' : option.text;
-            label.className = 'text-xs sm:text-sm text-center mt-1 break-all'; 
-            label.title = option.text;
+            // 显示对应的字幕
+            let subtitleText = pg3Subtitles[word];
+            let subtitleBox = document.getElementById('pg3-subtitle');
+            if (subtitleText && subtitleBox) {
+                subtitleBox.innerText = subtitleText;
+                subtitleBox.classList.add('show');
+                clearTimeout(window.subtitleTimeout); // 保证快速连续点击时，3秒计时器重置
+                window.subtitleTimeout = setTimeout(() => {
+                    subtitleBox.classList.remove('show');
+                }, 3000);
+            }
 
-            barWrapper.appendChild(bar);
-            barWrapper.appendChild(label);
-            resultsChartContainer.appendChild(barWrapper);
-        });
-    }
+            let toReveal = [];
+            const hasAll = (arr) => arr.every(w => window.pg3Clicked.has(w));
 
-    // --- Modal Logic ---
-    function showVoteDetails(optionId) {
-        const option = optionsData.find(opt => opt.id === optionId);
-        if (!option) return;
+            if (word === "我") toReveal.push("哥哥", "姐姐", "弟弟", "妹妹");
+            if (hasAll(["哥哥", "姐姐", "弟弟", "妹妹"])) toReveal.push("爸爸", "妈妈");
+            if (word === "爸爸") toReveal.push("伯伯", "叔叔", "姑姑");
+            if (hasAll(["爸爸", "伯伯", "叔叔", "姑姑"])) toReveal.push("爷爷", "奶奶");
+            if (word === "妈妈") toReveal.push("舅舅", "阿姨");
+            if (hasAll(["妈妈", "舅舅", "阿姨"])) toReveal.push("外公", "外婆");
 
-        modalOptionText.textContent = option.text;
-        if (option.imageSrc) {
-            modalOptionImage.src = option.imageSrc;
-            modalOptionImage.classList.remove('hidden');
-        } else {
-            modalOptionImage.classList.add('hidden');
+            toReveal.forEach(w => {
+                let targetCard = document.getElementById(`${pageId}-card-${w}`);
+                if(targetCard && targetCard.style.display === 'none') {
+                    targetCard.style.display = 'flex';
+                    targetCard.style.animation = 'popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                }
+            });
+            setTimeout(() => drawTreeLines(pageId), 100);
+        };
+
+        // ================= 核心：绘制优雅的家族树曲线 =================
+        function drawTreeLines(pagePrefix) {
+            const svg = document.getElementById(`svg-${pagePrefix}`); if(!svg) return; 
+            let svgStr = ''; 
+            
+            const getRect = (el) => { 
+                let rect = el.getBoundingClientRect(); let svgRect = svg.getBoundingClientRect(); 
+                return { 
+                    x: rect.left - svgRect.left + rect.width / 2, 
+                    y: rect.top - svgRect.top + rect.height / 2, 
+                    top: rect.top - svgRect.top, 
+                    bottom: rect.bottom - svgRect.top 
+                }; 
+            };
+            const getCard = (word) => { let card = document.getElementById(`${pagePrefix}-card-${word}`); return (card && card.style.display !== 'none') ? card : null; };
+            
+            const drawRel = (p1, p2, childList, color) => {
+                let nP1 = getCard(p1); let nP2 = getCard(p2); let children = childList.map(getCard).filter(c=>c);
+                if (!nP1 && !nP2) return;
+                let rect1 = nP1 ? getRect(nP1) : null; let rect2 = nP2 ? getRect(nP2) : null;
+                let midX, midY, parentBottom;
+
+                if (rect1 && rect2) {
+                    midX = (rect1.x + rect2.x) / 2; midY = (rect1.y + rect2.y) / 2; parentBottom = Math.max(rect1.bottom, rect2.bottom);
+                    svgStr += `<path d="M ${rect1.x} ${rect1.y} L ${rect2.x} ${rect2.y}" stroke="${color}" stroke-width="2" stroke-dasharray="6,6" fill="none" />`;
+                } else {
+                    let rect = rect1 || rect2; midX = rect.x; midY = rect.y; parentBottom = rect.bottom;
+                }
+                if (children.length === 0) return;
+                let childTop = Math.min(...children.map(c => getRect(c).top));
+                let branchY = parentBottom + (childTop - parentBottom) / 2;
+                children.forEach(cEl => {
+                    let c = getRect(cEl);
+                    svgStr += `<path d="M ${midX} ${midY} C ${midX} ${branchY}, ${c.x} ${branchY}, ${c.x} ${c.top}" stroke="${color}" stroke-width="2.5" fill="none" stroke-linecap="round" />`;
+                });
+            };
+            
+            drawRel('爷爷', '奶奶', ['伯伯', '叔叔', '姑姑', '爸爸'], '#3498DB'); 
+            drawRel('外公', '外婆', ['妈妈', '舅舅', '阿姨'], '#9B59B6');     
+            drawRel('爸爸', '妈妈', ['哥哥', '姐姐', '我', '弟弟', '妹妹'], '#2ECC71'); 
+            
+            svg.innerHTML = svgStr;
         }
-        modalVoteCount.textContent = `${option.votes} 票`;
 
-        modalDotsContainer.innerHTML = '';
-        modalVoterImageContainer.classList.add('hidden'); 
-        modalDotsContainer.classList.remove('hidden'); 
+        // ================= 第4页特有逻辑 =================
+        window.zoomPg4 = (delta) => { pg4Zoom += delta; pg4Zoom = Math.max(0.4, Math.min(pg4Zoom, 2)); document.getElementById('canvas-pg4').style.transform = `scale(${pg4Zoom})`; window.drawPg4Lines(); };
+        window.getCardByWordPg4 = (word) => document.querySelector(`#canvas-pg4 [data-word="${word}"]`);
+        
+        window.getDistance = (el1, el2) => { 
+            let x1 = parseFloat(el1.style.left || 0); let y1 = parseFloat(el1.style.top || 0);
+            let x2 = parseFloat(el2.style.left || 0); let y2 = parseFloat(el2.style.top || 0);
+            return Math.hypot(x1 - x2, y1 - y2); 
+        };
+        
+        window.drawPg4Lines = (currDrag = null) => {
+            const svg = document.getElementById('svg-pg4'); if(!svg) return; let svgStr = ''; 
+            
+            const getC = (el) => { return { x: parseFloat(el.style.left || 0) + 150 / 2, y: parseFloat(el.style.top || 0) + 80 / 2 }; };
+            
+            pg4Links.forEach(l => {
+                let n1 = window.getCardByWordPg4(l.n1); let n2 = window.getCardByWordPg4(l.n2);
+                if(n1 && n2) { let c1 = getC(n1); let c2 = getC(n2); svgStr += `<path d="M ${c1.x} ${c1.y} L ${c2.x} ${c2.y}" stroke="#2ECC71" stroke-width="3" stroke-linecap="round" />`; }
+            });
+            if (currDrag) {
+                let cards = Array.from(document.getElementById('canvas-pg4').querySelectorAll('.draggable')).filter(c => c !== currDrag);
+                let closest = null; let minD = Infinity;
+                cards.forEach(c => { let d = window.getDistance(currDrag, c); if(d < minD) { minD = d; closest = c; } });
+                
+                if (closest && minD < 250 && !pg4Links.some(l => (l.n1 === currDrag.dataset.word && l.n2 === closest.dataset.word) || (l.n2 === currDrag.dataset.word && l.n1 === closest.dataset.word))) {
+                    let c1 = getC(currDrag); let c2 = getC(closest);
+                    svgStr += `<path d="M ${c1.x} ${c1.y} L ${c2.x} ${c2.y}" stroke="#F1C40F" stroke-width="3" stroke-dasharray="8,8" stroke-linecap="round" />`;
+                }
+            }
+            svg.innerHTML = svgStr;
+        };
 
-        option.voters.forEach((voterImgSrc) => {
-            const dot = document.createElement('div');
-            dot.className = 'dot';
-            dot.onclick = () => showVoterImageInModal(voterImgSrc);
-            modalDotsContainer.appendChild(dot);
+        window.resetPg4 = () => {
+            pg4Links = []; let canvas = document.getElementById('canvas-pg4'); let dragArea = document.getElementById('pg4-drag-area');
+            Array.from(canvas.querySelectorAll('.draggable')).forEach(card => {
+                card.style.position = 'relative'; card.style.left = 'auto'; card.style.top = 'auto'; card.style.transform = 'none'; dragArea.appendChild(card);
+            });
+            pg4Zoom = 1; canvas.style.transform = `scale(1)`;
+            let wrapper = document.getElementById('canvas-pg4-container');
+            if(wrapper) { wrapper.scrollLeft = 1500 - wrapper.clientWidth / 2; wrapper.scrollTop = 1500 - wrapper.clientHeight / 2; }
+            window.drawPg4Lines(); window.playSound("sys_disconnect");
+        };
+
+        let currDrag = null, sX = 0, sY = 0;
+        window.startDrag = (e) => {
+            if (e.target.classList.contains('play-btn')) return;
+            currDrag = e.currentTarget; let canvas = document.getElementById('canvas-pg4');
+            if (currDrag.parentElement.id === 'pg4-drag-area') {
+                let r = currDrag.getBoundingClientRect(); let cr = canvas.getBoundingClientRect();
+                currDrag.style.position = 'absolute'; let lX = (r.left - cr.left)/pg4Zoom; let lY = (r.top - cr.top)/pg4Zoom;
+                currDrag.style.left = lX+'px'; currDrag.style.top = lY+'px';
+                canvas.appendChild(currDrag); currDrag.dataset.x = lX; currDrag.dataset.y = lY;
+            } else { currDrag.dataset.x = parseFloat(currDrag.style.left||0); currDrag.dataset.y = parseFloat(currDrag.style.top||0); }
+            currDrag.style.zIndex = 1000; currDrag.style.transform = "scale(1.05) rotate(5deg)";
+            sX = e.clientX; sY = e.clientY; currDrag.setPointerCapture(e.pointerId);
+            currDrag.addEventListener('pointermove', dragMove); currDrag.addEventListener('pointerup', endDrag);
+        };
+        const dragMove = (e) => {
+            if(!currDrag) return; let dx = e.clientX - sX; let dy = e.clientY - sY;
+            let zoom = currDrag.parentElement.id === 'canvas-pg4' ? pg4Zoom : 1;
+            currDrag.dataset.x = parseFloat(currDrag.dataset.x) + dx/zoom; currDrag.dataset.y = parseFloat(currDrag.dataset.y) + dy/zoom;
+            currDrag.style.left = currDrag.dataset.x + "px"; currDrag.style.top = currDrag.dataset.y + "px";
+            sX = e.clientX; sY = e.clientY; window.drawPg4Lines(currDrag); 
+        };
+        const endDrag = (e) => {
+            if(!currDrag) return; currDrag.removeEventListener('pointermove', dragMove); currDrag.removeEventListener('pointerup', endDrag); currDrag.releasePointerCapture(e.pointerId);
+            currDrag.style.transform = "none"; currDrag.style.zIndex = 10;
+            let dWord = currDrag.dataset.word; let cR = currDrag.getBoundingClientRect(); let pR = document.getElementById('canvas-pg4-container').getBoundingClientRect();
+            if (cR.bottom < pR.top || cR.top > pR.bottom || cR.right < pR.left || cR.left > pR.right) {
+                currDrag.style.position = 'relative'; currDrag.style.left = 'auto'; currDrag.style.top = 'auto';
+                document.getElementById('pg4-drag-area').appendChild(currDrag);
+                pg4Links = pg4Links.filter(l => l.n1 !== dWord && l.n2 !== dWord);
+                window.drawPg4Lines(); window.playSound("sys_error"); currDrag = null; return;
+            }
+            let cards = Array.from(document.getElementById('canvas-pg4').querySelectorAll('.draggable')).filter(c => c !== currDrag);
+            let cl = null; let minD = Infinity;
+            cards.forEach(c => { let d = window.getDistance(currDrag, c); if(d < minD) { minD = d; cl = c; } });
+            
+            if (cl && minD < 250) {
+                let tWord = cl.dataset.word;
+                if (!pg4Links.some(l => (l.n1 === dWord && l.n2 === tWord) || (l.n1 === tWord && l.n2 === dWord))) {
+                    pg4Links.push({n1: dWord, n2: tWord}); window.playSound("sys_connect"); 
+                }
+            }
+            pg4Links = pg4Links.filter(l => {
+                if(l.n1===dWord || l.n2===dWord){ 
+                    let oCard = window.getCardByWordPg4(l.n1===dWord?l.n2:l.n1); 
+                    if(oCard && window.getDistance(currDrag, oCard) < 350) return true; 
+                    else{ window.playSound("sys_disconnect"); return false; } 
+                }
+                return true;
+            });
+            window.drawPg4Lines(); currDrag = null;
+        };
+
+        // 拍照保留，作为当前页面的临时头像展示（因为没有本地存储，刷新会消失）
+        window.takePhoto = () => {
+            let video = document.getElementById('video-element'); let canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight; canvas.getContext('2d').drawImage(video, 0, 0);
+            familyData["我"].generalImg = canvas.toDataURL('image/jpeg', 0.8);
+            refreshTrees(); window.playSound("sys_photo");
+        };
+
+        window.saveTreeImage = () => {
+            window.playSound("sys_save");
+            let cArea = document.getElementById('canvas-pg4-container'); 
+            
+            // 修复带图片截图崩溃：为截图引擎配置了 useCORS 并允许 taint 处理
+            html2canvas(cArea, { 
+                backgroundColor: "#FAFAFA", 
+                scale: 2, 
+                useCORS: true, 
+                allowTaint: true 
+            }).then(canvas => {
+                let link = document.createElement('a'); link.download = '我的家族树.png'; link.href = canvas.toDataURL('image/png');
+                link.click(); window.showMsg("🖼️ 截屏成功，快去相册看看吧！");
+            }).catch(err => {
+                window.showMsg("截图失败: 图片资源未能成功加载或遇到了跨域限制。");
+            });
+        };
+
+        async function initCamera() { try { document.getElementById('video-element').srcObject = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }); } catch(err){} }
+
+        // Start Boot
+        document.getElementById('loader').style.display = 'none';
+        refreshTrees(); initCamera();
+        setTimeout(() => { drawTreeLines('pg1'); }, 300); // 确保第一页连线绘制
+
+        window.addEventListener('resize', () => {
+            let activePage = document.querySelector('.page.active').id;
+            if(activePage === 'pg4') window.drawPg4Lines(); else drawTreeLines(activePage);
         });
-        if (option.voters.length === 0) {
-            modalDotsContainer.innerHTML = '<p class="text-gray-500">还没有人投这一票哦！</p>';
-        }
-
-        voteDetailsModal.classList.add('active');
-    }
-
-    function showVoterImageInModal(imageSrc) {
-        modalVoterImage.src = imageSrc;
-        modalDotsContainer.classList.add('hidden');
-        modalVoterImageContainer.classList.remove('hidden');
-    }
-
-    backToDotsBtn.onclick = () => {
-        modalVoterImageContainer.classList.add('hidden');
-        modalDotsContainer.classList.remove('hidden');
-    };
-
-    closeModalBtn.onclick = () => {
-        voteDetailsModal.classList.remove('active');
-    };
-    
-    // Initialize the app
-    init();
-
-    // Attach event listeners for webcam controls
-    startWebcamBtn.addEventListener('click', startWebcamFlow);
-    capturePhotoBtn.addEventListener('click', captureStudentPhoto);
-    retakePhotoBtn.addEventListener('click', retakeStudentPhoto);
-
-</script>
+    </script>
 </body>
 </html>
