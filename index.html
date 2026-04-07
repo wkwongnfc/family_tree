@@ -9,16 +9,13 @@
         /* ================= 视觉样式 (CSS) ================= */
         * { box-sizing: border-box; user-select: none; touch-action: manipulation; }
         body {
-            /* 楷体字体族 */
             font-family: 'KaiTi', '楷体', 'STKaiti', '华文楷体', 'Comic Sans MS', 'PingFang SC', 'Microsoft YaHei', sans-serif;
             background-color: #E8F8F5; margin: 0; padding: 0; display: flex; flex-direction: column;
             height: 100vh; overflow: hidden;
         }
         
-        /* 强制所有按钮和输入框继承页面的楷体字体 */
         button, input { font-family: inherit; }
 
-        /* 顶部导航栏 */
         .nav-bar {
             background-color: #A9DFBF; padding: 10px; display: flex;
             justify-content: space-around; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 100;
@@ -33,11 +30,9 @@
         .nav-btn:active { transform: translateY(4px); box-shadow: none; }
         .nav-btn.active { background-color: #27AE60; color: white; border-color: #27AE60; }
         
-        /* 背景音乐按钮的专属颜色 */
         .bgm-btn { margin-left: auto; background-color: #F1C40F; border-color: #F1C40F; color: white; box-shadow: 0 4px 0px #D4AC0D; }
         .bgm-btn.active { background-color: #E67E22; border-color: #E67E22; box-shadow: 0 4px 0px #D35400; }
 
-        /* 页面容器 */
         .page { flex: 1; display: none; padding: 10px; overflow-y: auto; overflow-x: auto; text-align: center; position: relative; }
         .page.active { display: block; }
         h2 { color: #D35400; font-size: 24px; margin: 10px 0; text-shadow: 2px 2px 0px white;}
@@ -49,7 +44,6 @@
         }
         .tree-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
         
-        /* 行间距与组间距 */
         .tree-row { display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 100px; z-index: 10; } 
         .tree-group { display: flex; justify-content: center; align-items: center; gap: 20px; margin: 0 10px; min-height: 80px; }
         .tree-spacer { width: 50px; } 
@@ -65,7 +59,6 @@
             transition: transform 0.3s ease;
         }
         
-        /* 头像容器 */
         .emoji-pic { 
             width: 55px; height: 55px; pointer-events: none; display: flex; justify-content: center; align-items: center; flex-shrink: 0;
         }
@@ -73,16 +66,14 @@
         .custom-img { width: 100%; height: 100%; object-fit: cover; border: 2px solid #EEE; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .fallback-emoji { font-size: 45px; }
 
-        /* 右侧文字与按钮容器 */
-        .card-right { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 4px; }
+        .card-right { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 4px; pointer-events: none;}
         
         .play-btn {
             background-color: #E67E22; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 14px; cursor: pointer;
-            box-shadow: 0 2px 0px #D35400; display: flex; align-items: center; justify-content: center; z-index: 20;
+            box-shadow: 0 2px 0px #D35400; display: flex; align-items: center; justify-content: center; z-index: 20; pointer-events: auto;
         }
         .play-btn:active { transform: translateY(2px); box-shadow: none; }
 
-        /* --- 勾勾图标与已点击样式 --- */
         .check-mark {
             position: absolute; top: -10px; right: -10px; width: 28px; height: 28px;
             background-color: #2ECC71; color: white; border-radius: 50%;
@@ -94,7 +85,6 @@
         .item-card.listened { border-color: #2ECC71; }
         .item-card.listened .check-mark { opacity: 1; transform: scale(1); }
 
-        /* --- 闪卡翻转 --- */
         .flashcard { perspective: 1000px; width: 150px; height: 80px; z-index: 10; }
         .flashcard-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; cursor: pointer; }
         .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
@@ -105,7 +95,6 @@
         .flashcard-front { background-color: #FEF9E7; }
         .flashcard-back { background-color: #E8F8F5; transform: rotateY(180deg); font-size: 22px; }
 
-        /* --- 第3页字幕框 --- */
         .subtitle-box {
             position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 15px;
             background-color: rgba(255, 255, 255, 0.95); border: 4px solid #2ECC71;
@@ -116,7 +105,7 @@
         }
         .subtitle-box.show { opacity: 1; }
 
-        /* --- 第四页：自由画板 --- */
+        /* --- 第四页：自由画板与全新仓库 --- */
         #pg4.active { display: flex; flex-direction: column; }
         #pg4-workspace { display: flex; flex-direction: row; gap: 15px; flex: 1; width: 100%; margin-top: 10px; min-height: 0; position: relative; }
         #canvas-pg4-container {
@@ -139,11 +128,51 @@
         .zoom-controls .reset-btn { border-color: #E74C3C; color: #E74C3C; box-shadow: 0 3px 0 #E74C3C; margin-top: 5px; border-top: 2px dashed #CCC; padding-top: 10px; }
         .zoom-controls .save-btn { border-color: #3498DB; color: #3498DB; box-shadow: 0 3px 0 #3498DB; margin-top: 5px; }
         
+        /* ⭐️ 优化的双列微型仓库：完美解决 iPad 滚动问题 */
         #pg4-drag-area {
-            background-color: #FCF3CF; padding: 15px 5px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px;
-            width: 170px; border: 4px dashed #F1C40F; overflow-y: auto; flex-shrink: 0;
+            background-color: #FCF3CF; padding: 12px; border-radius: 20px; 
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-content: start;
+            width: 260px; border: 4px dashed #F1C40F; overflow-y: auto; flex-shrink: 0;
         }
+        /* 在仓库内部覆盖属性，让卡片缩小排列 */
+        #pg4-drag-area .draggable {
+            width: 100%; height: 60px; padding: 5px; gap: 4px;
+            border-width: 2px; border-radius: 12px; cursor: grab;
+            flex-direction: column; justify-content: center;
+        }
+        #pg4-drag-area .draggable .emoji-pic { width: 30px; height: 30px; margin-bottom: 0; }
+        #pg4-drag-area .draggable .fallback-emoji { font-size: 24px; }
+        #pg4-drag-area .draggable .name-label { font-size: 14px; }
+        #pg4-drag-area .draggable .play-btn { display: none; }
+        
         .draggable { touch-action: none; cursor: grab; z-index: 100; border-color: #3498DB; }
+
+        /* --- 封面页样式 --- */
+        #cover-page {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-image: url('img/cover_bg.png'); /* 全屏背景图路径 */
+            background-size: cover; background-position: center; background-repeat: no-repeat;
+            background-color: #E8F8F5; /* 如果图片没加载出来时的备用背景色 */
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9000; /* 层级位于加载动画之下，但在导航栏和画板之上 */
+        }
+        .cover-logo-left { position: absolute; top: 20px; left: 10px; max-width: 250px; height: auto; }
+        .cover-logo-right { position: absolute; top: 20px; right: 40px; max-width: 130px; height: auto; }
+        .start-btn {
+        position: absolute; /* 绝对定位，脱离中心的束缚 */
+            top: 70%; /* 往下移动的关键！75% 表示距离屏幕顶部 75% 的位置，你可以微调这个数字（比如 70% 或 80%） */
+            left: 0; right: 0; margin: 0 auto; width: fit-content; /* 绝对定位下的“水平居中”神技 */
+            font-family: inherit; font-size: 30px; font-weight: bold; padding: 15px 50px;
+            background-color: #E74C3C; color: white; border: 6px solid white; border-radius: 40px;
+            cursor: pointer; box-shadow: 0 8px 0px #C0392B, 0 15px 20px rgba(0,0,0,0.3);
+            transition: all 0.2s; z-index: 10;
+        }
+        .start-btn:active { transform: translateY(8px); box-shadow: 0 0px 0px #C0392B, 0 5px 10px rgba(0,0,0,0.2); }
+        .disclaimer {
+            position: absolute; bottom: 15px; width: 100%; text-align: center;
+            font-size: 12px; color: #333; font-family: Arial, sans-serif; /* 全英文建议使用无衬线字体 */
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8); padding: 0 20px; line-height: 1.4;
+        }
 
         #msg-box { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: white; padding: 15px 30px; border-radius: 20px; font-size: 24px; display: none; z-index: 9999; text-align: center; }
         #loader { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; }
@@ -155,12 +184,27 @@
 
     <div id="loader"><div class="spinner"></div><h2 style="color:#2ECC71; margin-top:20px;">正在加载游戏...</h2></div>
 
+    <!-- --- 封面页 --- -->
+    <div id="cover-page">
+        <!-- 左上角Logo -->
+        <img src="img/logo_left.gif" alt="Logo Left" class="cover-logo-left" onerror="this.style.display='none'">
+        <!-- 右上角Logo -->
+        <img src="img/logo_right.png" alt="Logo Right" class="cover-logo-right" onerror="this.style.display='none'">
+        
+        <!-- 中央开始按钮 -->
+        <button class="start-btn" onclick="window.enterGame()">开始</button>
+        
+        <!-- 正下方英文Disclaimer -->
+        <div class="disclaimer">
+            © NTUC FIRST CAMPUS LTD. 2026 All rights reserved. <br> No part of this material may be reproduced, stored in any retrieval system, or transmitted, in any form or by any means, <br> whether electronic or mechanical, including photocopying and recording, without the written permission of the copyright holder.
+        </div>
+    </div>
+
     <div class="nav-bar">
         <button class="nav-btn active" onclick="window.switchPage('pg1')">1. 概览图</button>
         <button class="nav-btn" onclick="window.switchPage('pg2')">2. 闪卡树</button>
         <button class="nav-btn" onclick="window.switchPage('pg3')">3. 树枝找</button>
         <button class="nav-btn" onclick="window.switchPage('pg4')">4. 拼建树</button>
-        <!-- 新增的背景音乐按钮 -->
         <button class="nav-btn bgm-btn" onclick="window.toggleBGM()">🎵 音乐关</button>
     </div>
 
@@ -175,7 +219,7 @@
         <div class="cam-controls" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 5px;">
             <video id="video-element" autoplay playsinline style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #E74C3C; object-fit: cover; background: #ddd;"></video>
             <button onclick="window.takePhoto()" style="font-size:16px; padding:6px 15px; border-radius:10px; border:none; background:#E74C3C; color:white; font-weight:bold; cursor:pointer; box-shadow: 0 4px 0px #C0392B;">📸 拍头像</button>
-            <span style="color:#555; font-size:14px; font-weight:bold;">左侧拖入画板，靠近自动连线！</span>
+            <span style="color:#555; font-size:14px; font-weight:bold;">左侧拖出并组合你的家族树吧！</span>
         </div>
         <div id="pg4-workspace">
             <div id="pg4-drag-area"></div>
@@ -219,37 +263,83 @@
             "sys_disconnect": { label: "断开连线音", defaultText: "断开了", audioPath: "audio_sys/sys_disconnect.mp3" },
             "sys_photo": { label: "拍照完成音", defaultText: "拍照成功", audioPath: "audio_sys/sys_photo.mp3" },
             "sys_save": { label: "保存图片提示", defaultText: "正在生成图片", audioPath: "audio_sys/sys_save.mp3" },
-            "sys_error": { label: "超出边界声", defaultText: "咻", audioPath: "audio_sys/sys_error.mp3" },
-            "sys_bgm": { label: "背景音乐", defaultText: "无", audioPath: "audio_sys/bgm.mp3" } // 新增背景音乐路径
+            "sys_error": { label: "超出边界声", defaultText: "错误", audioPath: "audio_sys/sys_error.mp3" },
+            "sys_bgm": { label: "背景音乐", defaultText: "无", audioPath: "audio_sys/bgm.mp3" } 
         };
 
         const pg3Subtitles = {
-            "爷爷": "爸爸的爸爸叫爷爷",
-            "奶奶": "爸爸的妈妈叫奶奶",
-            "伯伯": "爸爸的哥哥叫伯伯",
-            "叔叔": "爸爸的弟弟叫叔叔",
-            "姑姑": "爸爸的姐妹叫姑姑",
-            "外公": "妈妈的爸爸叫外公",
-            "外婆": "妈妈的妈妈叫外婆",
-            "舅舅": "妈妈的兄弟叫舅舅",
-            "阿姨": "妈妈的姐妹叫阿姨",
-            "哥哥": "我的哥哥陪我玩",
-            "姐姐": "我的姐姐笑容甜",
-            "弟弟": "我的弟弟跑得快",
-            "妹妹": "我的妹妹最可爱"
+            "爷爷": "爸爸的爸爸叫爷爷。",
+            "奶奶": "爸爸的妈妈叫奶奶。",
+            "伯伯": "爸爸的哥哥叫伯伯。",
+            "叔叔": "爸爸的弟弟叫叔叔。",
+            "姑姑": "爸爸的姐妹叫姑姑。",
+            "外公": "妈妈的爸爸叫外公。",
+            "外婆": "妈妈的妈妈叫外婆。",
+            "舅舅": "妈妈的兄弟叫舅舅。",
+            "阿姨": "妈妈的姐妹叫阿姨。",
+            "哥哥": "我的哥哥陪我玩。",
+            "姐姐": "我的姐姐笑容甜。",
+            "弟弟": "我的弟弟跑得快。",
+            "妹妹": "我的妹妹最可爱。"
         };
 
         let pg4Links = []; let pg4Zoom = 1;
         window.pg3Clicked = new Set(); 
+        window.pg3RevealedGroups = new Set(); 
         window.subtitleTimeout = null;
-        window.bgmAudio = null; // BGM 控制对象
+        window.bgmAudio = null;
+
+        // ================= 封面页控制 =================
+        window.enterGame = () => {
+            window.playSound("sys_connect"); // 点击开始时播放一声清脆的连接音
+            let cover = document.getElementById('cover-page');
+            cover.style.opacity = '0';
+            cover.style.transition = 'opacity 0.5s ease';
+            // 动画结束后将封面彻底隐藏，不影响底下页面的点击
+            setTimeout(() => { cover.style.display = 'none'; }, 500); 
+        };
+
+        // ⭐️ 定义家族连线的严格规则 Map
+        let validPairsMap = {};
+        const addValidPair = (a, b) => {
+            if(!validPairsMap[a]) validPairsMap[a] = [];
+            if(!validPairsMap[b]) validPairsMap[b] = [];
+            validPairsMap[a].push(b); validPairsMap[b].push(a);
+        };
+
+        // 规则 1：“我”和兄弟姐妹、父母连接
+        const kids = ["我", "哥哥", "姐姐", "弟弟", "妹妹"];
+        kids.forEach(k1 => {
+            kids.forEach(k2 => { if(k1!==k2) addValidPair(k1, k2); });
+            addValidPair(k1, "爸爸"); addValidPair(k1, "妈妈");
+        });
+        // 规则 2：父母之间
+        addValidPair("爸爸", "妈妈");
+        // 规则 3：爸爸这边的亲属
+        const dadSide = ["爸爸", "伯伯", "叔叔", "姑姑"];
+        dadSide.forEach(d1 => {
+            dadSide.forEach(d2 => { if(d1!==d2) addValidPair(d1, d2); });
+            addValidPair(d1, "爷爷"); addValidPair(d1, "奶奶");
+        });
+        addValidPair("爷爷", "奶奶");
+        // 规则 4：妈妈这边的亲属
+        const momSide = ["妈妈", "舅舅", "阿姨"];
+        momSide.forEach(m1 => {
+            momSide.forEach(m2 => { if(m1!==m2) addValidPair(m1, m2); });
+            addValidPair(m1, "外公"); addValidPair(m1, "外婆");
+        });
+        addValidPair("外公", "外婆");
+
+        window.isValidConnection = (w1, w2) => {
+            return validPairsMap[w1] && validPairsMap[w1].includes(w2);
+        };
 
         // ================= 背景音乐控制 =================
         window.toggleBGM = () => {
             let btn = document.querySelector('.bgm-btn');
             if (!window.bgmAudio) {
                 window.bgmAudio = new Audio(systemAudioData['sys_bgm'].audioPath);
-                window.bgmAudio.loop = true; // 循环播放
+                window.bgmAudio.loop = true; 
             }
             if (window.bgmAudio.paused) {
                 window.bgmAudio.play().then(() => {
@@ -272,7 +362,6 @@
             if (path) {
                 return `
                 <div class="pic-wrapper">
-                    <!-- 如果图片找不到 (onerror)，隐藏图片并显示旁边的 fallback-emoji -->
                     <img src="${path}" class="custom-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div class="fallback-emoji" style="display:none;">${info.emoji}</div>
                 </div>`;
@@ -283,12 +372,11 @@
         function buildTreeLayout(pageId, mode) {
             const container = document.getElementById(`canvas-${pageId}`);
             if (mode === 'puzzle') {
-                // 修复：必须增加 xmlns 命名空间，否则 html2canvas 渲染带 SVG 动态节点的画布会崩溃
                 container.innerHTML = `<svg class="tree-svg" id="svg-${pageId}" xmlns="http://www.w3.org/2000/svg"></svg>`;
                 let dragArea = document.getElementById('pg4-drag-area'); dragArea.innerHTML = '';
                 
                 const createDragHTML = (w) => `
-                    <div class="item-card draggable" data-word="${w}" onpointerdown="window.startDrag(event)">
+                    <div class="item-card draggable pg4-card-${w}" data-word="${w}" onpointerdown="window.startDrag(event)">
                         <div class="emoji-pic">${getPicHTML(w, pageId)}</div>
                         <div class="card-right"><div class="name-label">${w}</div></div>
                     </div>`;
@@ -299,7 +387,6 @@
                 return; 
             }
 
-            // 修复：同样为其他页面增加 xmlns 命名空间
             container.innerHTML = `
                 <svg class="tree-svg" id="svg-${pageId}" xmlns="http://www.w3.org/2000/svg"></svg>
                 <div class="tree-row generation-1"><div class="tree-group" id="${pageId}-patGP"></div><div class="tree-spacer"></div><div class="tree-group" id="${pageId}-matGP"></div></div>
@@ -341,7 +428,7 @@
             setTimeout(() => { let activePage = document.querySelector('.page.active').id; if (activePage !== 'pg4') drawTreeLines(activePage); }, 150);
         }
 
-        // ================= 操作与发音引擎 (含优雅降级 TTS) =================
+        // ================= 操作与发音引擎 =================
         window.switchPage = (pageId) => {
             document.querySelectorAll('.page, .nav-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(pageId).classList.add('active'); 
@@ -364,7 +451,6 @@
 
             if (path) {
                 let audio = new Audio(path);
-                // 自动处理路径错误（如找不到mp3文件），播放失败则立刻启用 AI 朗读备用
                 audio.play().catch(err => { window.fallbackTTS(fallbackText); });
                 return;
             }
@@ -381,7 +467,7 @@
 
         // ================= 第3页：顺序解锁点击逻辑 =================
         window.handlePg3Click = (word, pageId, event) => {
-            if (event.target.classList.contains('play-btn')) return; // 点按钮只发音，不解锁
+            if (event.target.classList.contains('play-btn')) return; 
             let card = document.getElementById(`${pageId}-card-${word}`);
             if(!card || card.style.display === 'none') return;
             
@@ -389,29 +475,24 @@
             window.pg3Clicked.add(word);
             window.playSound(word, null, 'person', pageId);
 
-            // 显示对应的字幕
             let subtitleText = pg3Subtitles[word];
             let subtitleBox = document.getElementById('pg3-subtitle');
             if (subtitleText && subtitleBox) {
                 subtitleBox.innerText = subtitleText;
                 subtitleBox.classList.add('show');
-                clearTimeout(window.subtitleTimeout); // 保证快速连续点击时，3秒计时器重置
+                clearTimeout(window.subtitleTimeout); 
                 window.subtitleTimeout = setTimeout(() => {
                     subtitleBox.classList.remove('show');
                 }, 3000);
             }
 
-            let toReveal = [];
-            const hasAll = (arr) => arr.every(w => window.pg3Clicked.has(w));
+            // 1. 立即显示的卡片（点击核心人物，同辈兄弟姐妹立刻出现）
+            let immediateReveal = [];
+            if (word === "我") immediateReveal.push("哥哥", "姐姐", "弟弟", "妹妹");
+            if (word === "爸爸") immediateReveal.push("伯伯", "叔叔", "姑姑");
+            if (word === "妈妈") immediateReveal.push("舅舅", "阿姨");
 
-            if (word === "我") toReveal.push("哥哥", "姐姐", "弟弟", "妹妹");
-            if (hasAll(["哥哥", "姐姐", "弟弟", "妹妹"])) toReveal.push("爸爸", "妈妈");
-            if (word === "爸爸") toReveal.push("伯伯", "叔叔", "姑姑");
-            if (hasAll(["爸爸", "伯伯", "叔叔", "姑姑"])) toReveal.push("爷爷", "奶奶");
-            if (word === "妈妈") toReveal.push("舅舅", "阿姨");
-            if (hasAll(["妈妈", "舅舅", "阿姨"])) toReveal.push("外公", "外婆");
-
-            toReveal.forEach(w => {
+            immediateReveal.forEach(w => {
                 let targetCard = document.getElementById(`${pageId}-card-${w}`);
                 if(targetCard && targetCard.style.display === 'none') {
                     targetCard.style.display = 'flex';
@@ -419,9 +500,34 @@
                 }
             });
             setTimeout(() => drawTreeLines(pageId), 100);
+
+            // 2. 延迟 3 秒显示的卡片（全员点击完毕后，长辈才出现）
+            const hasAll = (arr) => arr.every(w => window.pg3Clicked.has(w));
+            
+            const checkAndDelayReveal = (requiredGroup, groupKey, targetCards) => {
+                // 如果这一排全部被点击过，且还没有触发过延迟动画
+                if (hasAll(requiredGroup) && !window.pg3RevealedGroups.has(groupKey)) {
+                    window.pg3RevealedGroups.add(groupKey); // 标记为已触发
+                    setTimeout(() => {
+                        targetCards.forEach(w => {
+                            let targetCard = document.getElementById(`${pageId}-card-${w}`);
+                            if(targetCard && targetCard.style.display === 'none') {
+                                targetCard.style.display = 'flex';
+                                targetCard.style.animation = 'popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                            }
+                        });
+                        drawTreeLines(pageId); // 动画出现后重绘连线
+                    }, 3000); // 严格等待 3 秒
+                }
+            };
+
+            // 按照你的规则：需要这一排所有人（包含核心人物自己）都被点击过，才触发3秒延迟
+            checkAndDelayReveal(["我", "哥哥", "姐姐", "弟弟", "妹妹"], "parents", ["爸爸", "妈妈"]);
+            checkAndDelayReveal(["爸爸", "伯伯", "叔叔", "姑姑"], "patGrandparents", ["爷爷", "奶奶"]);
+            checkAndDelayReveal(["妈妈", "舅舅", "阿姨"], "matGrandparents", ["外公", "外婆"]);
         };
 
-        // ================= 核心：绘制优雅的家族树曲线 =================
+        // ================= 核心：绘制直角折线的家族树 =================
         function drawTreeLines(pagePrefix) {
             const svg = document.getElementById(`svg-${pagePrefix}`); if(!svg) return; 
             let svgStr = ''; 
@@ -452,9 +558,10 @@
                 if (children.length === 0) return;
                 let childTop = Math.min(...children.map(c => getRect(c).top));
                 let branchY = parentBottom + (childTop - parentBottom) / 2;
+                
                 children.forEach(cEl => {
                     let c = getRect(cEl);
-                    svgStr += `<path d="M ${midX} ${midY} C ${midX} ${branchY}, ${c.x} ${branchY}, ${c.x} ${c.top}" stroke="${color}" stroke-width="2.5" fill="none" stroke-linecap="round" />`;
+                    svgStr += `<path d="M ${midX} ${midY} L ${midX} ${branchY} L ${c.x} ${branchY} L ${c.x} ${c.top}" stroke="${color}" stroke-width="2.5" fill="none" stroke-linejoin="round" stroke-linecap="round" />`;
                 });
             };
             
@@ -465,7 +572,7 @@
             svg.innerHTML = svgStr;
         }
 
-        // ================= 第4页特有逻辑 =================
+        // ================= 第4页特有逻辑与通关解锁 =================
         window.zoomPg4 = (delta) => { pg4Zoom += delta; pg4Zoom = Math.max(0.4, Math.min(pg4Zoom, 2)); document.getElementById('canvas-pg4').style.transform = `scale(${pg4Zoom})`; window.drawPg4Lines(); };
         window.getCardByWordPg4 = (word) => document.querySelector(`#canvas-pg4 [data-word="${word}"]`);
         
@@ -477,21 +584,26 @@
         
         window.drawPg4Lines = (currDrag = null) => {
             const svg = document.getElementById('svg-pg4'); if(!svg) return; let svgStr = ''; 
-            
             const getC = (el) => { return { x: parseFloat(el.style.left || 0) + 150 / 2, y: parseFloat(el.style.top || 0) + 80 / 2 }; };
             
             pg4Links.forEach(l => {
                 let n1 = window.getCardByWordPg4(l.n1); let n2 = window.getCardByWordPg4(l.n2);
-                if(n1 && n2) { let c1 = getC(n1); let c2 = getC(n2); svgStr += `<path d="M ${c1.x} ${c1.y} L ${c2.x} ${c2.y}" stroke="#2ECC71" stroke-width="3" stroke-linecap="round" />`; }
+                if(n1 && n2) { 
+                    let c1 = getC(n1); let c2 = getC(n2); 
+                    let midY = (c1.y + c2.y) / 2;
+                    svgStr += `<path d="M ${c1.x} ${c1.y} L ${c1.x} ${midY} L ${c2.x} ${midY} L ${c2.x} ${c2.y}" stroke="#2ECC71" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" fill="none" />`; 
+                }
             });
             if (currDrag) {
                 let cards = Array.from(document.getElementById('canvas-pg4').querySelectorAll('.draggable')).filter(c => c !== currDrag);
                 let closest = null; let minD = Infinity;
                 cards.forEach(c => { let d = window.getDistance(currDrag, c); if(d < minD) { minD = d; closest = c; } });
                 
-                if (closest && minD < 250 && !pg4Links.some(l => (l.n1 === currDrag.dataset.word && l.n2 === closest.dataset.word) || (l.n2 === currDrag.dataset.word && l.n1 === closest.dataset.word))) {
+                // ⭐ 实时检测靠近目标是否符合家庭逻辑规则
+                if (closest && minD < 250 && window.isValidConnection(currDrag.dataset.word, closest.dataset.word) && !pg4Links.some(l => (l.n1 === currDrag.dataset.word && l.n2 === closest.dataset.word) || (l.n2 === currDrag.dataset.word && l.n1 === closest.dataset.word))) {
                     let c1 = getC(currDrag); let c2 = getC(closest);
-                    svgStr += `<path d="M ${c1.x} ${c1.y} L ${c2.x} ${c2.y}" stroke="#F1C40F" stroke-width="3" stroke-dasharray="8,8" stroke-linecap="round" />`;
+                    let midY = (c1.y + c2.y) / 2;
+                    svgStr += `<path d="M ${c1.x} ${c1.y} L ${c1.x} ${midY} L ${c2.x} ${midY} L ${c2.x} ${c2.y}" stroke="#F1C40F" stroke-width="3" stroke-dasharray="8,8" stroke-linejoin="round" stroke-linecap="round" fill="none" />`;
                 }
             }
             svg.innerHTML = svgStr;
@@ -513,8 +625,11 @@
             if (e.target.classList.contains('play-btn')) return;
             currDrag = e.currentTarget; let canvas = document.getElementById('canvas-pg4');
             if (currDrag.parentElement.id === 'pg4-drag-area') {
-                let r = currDrag.getBoundingClientRect(); let cr = canvas.getBoundingClientRect();
-                currDrag.style.position = 'absolute'; let lX = (r.left - cr.left)/pg4Zoom; let lY = (r.top - cr.top)/pg4Zoom;
+                let cr = canvas.getBoundingClientRect();
+                currDrag.style.position = 'absolute'; 
+                // ⭐ 将放大后的卡片完美吸附在手指导航中心 (150x80)
+                let lX = (e.clientX - cr.left)/pg4Zoom - 150/2; 
+                let lY = (e.clientY - cr.top)/pg4Zoom - 80/2;
                 currDrag.style.left = lX+'px'; currDrag.style.top = lY+'px';
                 canvas.appendChild(currDrag); currDrag.dataset.x = lX; currDrag.dataset.y = lY;
             } else { currDrag.dataset.x = parseFloat(currDrag.style.left||0); currDrag.dataset.y = parseFloat(currDrag.style.top||0); }
@@ -537,7 +652,8 @@
                 currDrag.style.position = 'relative'; currDrag.style.left = 'auto'; currDrag.style.top = 'auto';
                 document.getElementById('pg4-drag-area').appendChild(currDrag);
                 pg4Links = pg4Links.filter(l => l.n1 !== dWord && l.n2 !== dWord);
-                window.drawPg4Lines(); window.playSound("sys_error"); currDrag = null; return;
+                window.drawPg4Lines(); window.playSound("sys_error"); currDrag = null; 
+                return;
             }
             let cards = Array.from(document.getElementById('canvas-pg4').querySelectorAll('.draggable')).filter(c => c !== currDrag);
             let cl = null; let minD = Infinity;
@@ -545,8 +661,14 @@
             
             if (cl && minD < 250) {
                 let tWord = cl.dataset.word;
-                if (!pg4Links.some(l => (l.n1 === dWord && l.n2 === tWord) || (l.n1 === tWord && l.n2 === dWord))) {
-                    pg4Links.push({n1: dWord, n2: tWord}); window.playSound("sys_connect"); 
+                // ⭐ 连线时执行严格家庭关系规则校验
+                if (window.isValidConnection(dWord, tWord)) {
+                    if (!pg4Links.some(l => (l.n1 === dWord && l.n2 === tWord) || (l.n1 === tWord && l.n2 === dWord))) {
+                        pg4Links.push({n1: dWord, n2: tWord}); window.playSound("sys_connect"); 
+                    }
+                } else {
+                    window.showMsg(`加油，再试一次！`);
+                    window.playSound("sys_error");
                 }
             }
             pg4Links = pg4Links.filter(l => {
@@ -560,7 +682,6 @@
             window.drawPg4Lines(); currDrag = null;
         };
 
-        // 拍照保留，作为当前页面的临时头像展示（因为没有本地存储，刷新会消失）
         window.takePhoto = () => {
             let video = document.getElementById('video-element'); let canvas = document.createElement('canvas');
             canvas.width = video.videoWidth; canvas.height = video.videoHeight; canvas.getContext('2d').drawImage(video, 0, 0);
@@ -572,17 +693,23 @@
             window.playSound("sys_save");
             let cArea = document.getElementById('canvas-pg4-container'); 
             
-            // 修复带图片截图崩溃：为截图引擎配置了 useCORS 并允许 taint 处理
             html2canvas(cArea, { 
                 backgroundColor: "#FAFAFA", 
                 scale: 2, 
-                useCORS: true, 
-                allowTaint: true 
+                useCORS: true 
             }).then(canvas => {
-                let link = document.createElement('a'); link.download = '我的家族树.png'; link.href = canvas.toDataURL('image/png');
-                link.click(); window.showMsg("🖼️ 截屏成功，快去相册看看吧！");
+                try {
+                    let dataUrl = canvas.toDataURL('image/png');
+                    let link = document.createElement('a'); 
+                    link.download = '我的家族树.png'; 
+                    link.href = dataUrl;
+                    link.click(); 
+                    window.showMsg("🖼️ 截屏成功，快去相册看看吧！");
+                } catch (e) {
+                    window.showMsg("⚠️ 本地双击打开文件无法截图，上传到 GitHub Pages 后即可正常截图！");
+                }
             }).catch(err => {
-                window.showMsg("截图失败: 图片资源未能成功加载或遇到了跨域限制。");
+                window.showMsg("截图生成过程中遇到错误，请确保图片路径正确。");
             });
         };
 
@@ -591,7 +718,7 @@
         // Start Boot
         document.getElementById('loader').style.display = 'none';
         refreshTrees(); initCamera();
-        setTimeout(() => { drawTreeLines('pg1'); }, 300); // 确保第一页连线绘制
+        setTimeout(() => { drawTreeLines('pg1'); }, 300); 
 
         window.addEventListener('resize', () => {
             let activePage = document.querySelector('.page.active').id;
