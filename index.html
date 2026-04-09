@@ -16,28 +16,35 @@
         
         button, input { font-family: inherit; }
 
+        /* 顶部导航栏：左右对齐 */
         .nav-bar {
-            background-color: #A9DFBF; padding: 10px; display: flex;
-            justify-content: space-around; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 100;
-            flex-wrap: wrap; gap: 5px;
+            background-color: #A9DFBF; padding: 10px 20px; 
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 100;
+            position: relative; height: 70px;
         }
-        .nav-btn {
-            font-size: 18px; font-weight: bold; padding: 6px 14px;
-            border: 3px solid white; border-radius: 20px; background-color: white;
-            color: #27AE60; cursor: pointer; transition: transform 0.2s;
-            box-shadow: 0 4px 0px #27AE60;
+
+        .nav-arrows { display: flex; gap: 15px; align-items: center; }
+
+        .arrow-btn {
+            width: 45px; height: 45px; cursor: pointer;
+            transition: transform 0.2s; object-fit: contain;
         }
-        .nav-btn:active { transform: translateY(4px); box-shadow: none; }
-        .nav-btn.active { background-color: #27AE60; color: white; border-color: #27AE60; }
+        .arrow-btn:active { transform: scale(0.9); }
         
-        .bgm-btn { margin-left: auto; background-color: #F1C40F; border-color: #F1C40F; color: white; box-shadow: 0 4px 0px #D4AC0D; }
+        .bgm-btn { 
+            font-size: 18px; font-weight: bold; padding: 6px 14px;
+            border: 3px solid white; border-radius: 20px; 
+            background-color: #F1C40F; border-color: #F1C40F; color: white; 
+            box-shadow: 0 4px 0px #D4AC0D; cursor: pointer; transition: all 0.2s;
+        }
+        .bgm-btn:active { transform: translateY(4px); box-shadow: none; }
         .bgm-btn.active { background-color: #E67E22; border-color: #E67E22; box-shadow: 0 4px 0px #D35400; }
 
         .page { flex: 1; display: none; padding: 10px; overflow-y: auto; overflow-x: auto; text-align: center; position: relative; }
         .page.active { display: block; }
         h2 { color: #D35400; font-size: 24px; margin: 10px 0; text-shadow: 2px 2px 0px white;}
 
-        /* --- 核心：树状图画布与网格 --- */
         .tree-canvas {
             position: relative; width: 100%; min-width: 1100px; min-height: 520px;
             display: flex; flex-direction: column; align-items: center; padding-top: 20px;
@@ -50,7 +57,6 @@
 
         @keyframes popIn { 0% { transform: scale(0.1); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 
-        /* --- 横向大卡片样式 --- */
         .item-card {
             display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
             width: 150px; height: 80px; padding: 10px; gap: 10px;
@@ -105,7 +111,6 @@
         }
         .subtitle-box.show { opacity: 1; }
 
-        /* --- 第四页：自由画板与全新仓库 --- */
         #pg4.active { display: flex; flex-direction: column; }
         #pg4-workspace { display: flex; flex-direction: row; gap: 15px; flex: 1; width: 100%; margin-top: 10px; min-height: 0; position: relative; }
         #canvas-pg4-container {
@@ -128,13 +133,11 @@
         .zoom-controls .reset-btn { border-color: #E74C3C; color: #E74C3C; box-shadow: 0 3px 0 #E74C3C; margin-top: 5px; border-top: 2px dashed #CCC; padding-top: 10px; }
         .zoom-controls .save-btn { border-color: #3498DB; color: #3498DB; box-shadow: 0 3px 0 #3498DB; margin-top: 5px; }
         
-        /* ⭐️ 优化的双列微型仓库：完美解决 iPad 滚动问题 */
         #pg4-drag-area {
             background-color: #FCF3CF; padding: 12px; border-radius: 20px; 
             display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-content: start;
             width: 260px; border: 4px dashed #F1C40F; overflow-y: auto; flex-shrink: 0;
         }
-        /* 在仓库内部覆盖属性，让卡片缩小排列 */
         #pg4-drag-area .draggable {
             width: 100%; height: 60px; padding: 5px; gap: 4px;
             border-width: 2px; border-radius: 12px; cursor: grab;
@@ -150,27 +153,28 @@
         /* --- 封面页样式 --- */
         #cover-page {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background-image: url('img/cover_bg.png'); /* 全屏背景图路径 */
+            background-image: url('img/cover_bg.png'); 
             background-size: cover; background-position: center; background-repeat: no-repeat;
-            background-color: #E8F8F5; /* 如果图片没加载出来时的备用背景色 */
+            background-color: #E8F8F5; 
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 9000; /* 层级位于加载动画之下，但在导航栏和画板之上 */
+            z-index: 9000; 
         }
-        .cover-logo-left { position: absolute; top: 20px; left: 10px; max-width: 250px; height: auto; }
-        .cover-logo-right { position: absolute; top: 20px; right: 40px; max-width: 130px; height: auto; }
+        .cover-logo-left { position: absolute; top: 20px; left: 20px; max-width: 150px; height: auto; }
+        .cover-logo-right { position: absolute; top: 20px; right: 20px; max-width: 150px; height: auto; }
         .start-btn {
-        position: absolute; /* 绝对定位，脱离中心的束缚 */
-            top: 70%; /* 往下移动的关键！75% 表示距离屏幕顶部 75% 的位置，你可以微调这个数字（比如 70% 或 80%） */
-            left: 0; right: 0; margin: 0 auto; width: fit-content; /* 绝对定位下的“水平居中”神技 */
-            font-family: inherit; font-size: 30px; font-weight: bold; padding: 15px 50px;
+            position: absolute;
+            top: 75%; 
+            left: 0; right: 0; margin: 0 auto; width: fit-content; 
+            font-family: inherit; font-size: 40px; font-weight: bold; padding: 15px 60px;
             background-color: #E74C3C; color: white; border: 6px solid white; border-radius: 40px;
             cursor: pointer; box-shadow: 0 8px 0px #C0392B, 0 15px 20px rgba(0,0,0,0.3);
             transition: all 0.2s; z-index: 10;
         }
         .start-btn:active { transform: translateY(8px); box-shadow: 0 0px 0px #C0392B, 0 5px 10px rgba(0,0,0,0.2); }
+        
         .disclaimer {
             position: absolute; bottom: 15px; width: 100%; text-align: center;
-            font-size: 12px; color: #333; font-family: Arial, sans-serif; /* 全英文建议使用无衬线字体 */
+            font-size: 14px; color: #333; font-family: Arial, sans-serif; 
             text-shadow: 1px 1px 2px rgba(255,255,255,0.8); padding: 0 20px; line-height: 1.4;
         }
 
@@ -187,7 +191,7 @@
     <!-- --- 封面页 --- -->
     <div id="cover-page">
         <!-- 左上角Logo -->
-        <img src="img/logo_left.gif" alt="Logo Left" class="cover-logo-left" onerror="this.style.display='none'">
+        <img src="img/logo_left.png" alt="Logo Left" class="cover-logo-left" onerror="this.style.display='none'">
         <!-- 右上角Logo -->
         <img src="img/logo_right.png" alt="Logo Right" class="cover-logo-right" onerror="this.style.display='none'">
         
@@ -196,30 +200,38 @@
         
         <!-- 正下方英文Disclaimer -->
         <div class="disclaimer">
-            © NTUC FIRST CAMPUS LTD. 2026 All rights reserved. <br> No part of this material may be reproduced, stored in any retrieval system, or transmitted, in any form or by any means, <br> whether electronic or mechanical, including photocopying and recording, without the written permission of the copyright holder.
+            © 2026 Your Company Name. All rights reserved.<br>
+            Disclaimer: This interactive application is designed for educational purposes only.
         </div>
     </div>
 
+    <!-- 全新图片箭头导航栏 -->
     <div class="nav-bar">
-        <button class="nav-btn active" onclick="window.switchPage('pg1')">1. 概览图</button>
-        <button class="nav-btn" onclick="window.switchPage('pg2')">2. 闪卡树</button>
-        <button class="nav-btn" onclick="window.switchPage('pg3')">3. 树枝找</button>
-        <button class="nav-btn" onclick="window.switchPage('pg4')">4. 拼建树</button>
-        <button class="nav-btn bgm-btn" onclick="window.toggleBGM()">🎵 音乐关</button>
+        <div class="nav-arrows">
+            <!-- 左箭头图片 -->
+            <img src="img/prev_arrow.png" id="prev-btn" class="arrow-btn" onclick="window.prevPage()" alt="上一页" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23F5CBA7%22/><path d=%22M60 25 L35 50 L60 75%22 stroke=%22white%22 stroke-width=%228%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>'">
+            
+            <!-- 右箭头图片 -->
+            <img src="img/next_arrow.png" id="next-btn" class="arrow-btn" onclick="window.nextPage()" alt="下一页" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23F5CBA7%22/><path d=%22M40 25 L65 50 L40 75%22 stroke=%22white%22 stroke-width=%228%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>'">
+        </div>
+        
+        <button class="bgm-btn" onclick="window.toggleBGM()">🎵 音乐关</button>
     </div>
 
-    <div id="pg1" class="page active"><h2>这是我的家族树</h2><div id="canvas-pg1" class="tree-canvas"></div></div>
-    <div id="pg2" class="page"><h2>点一卡片，认字听音</h2><div id="canvas-pg2" class="tree-canvas"></div></div>
+    <!-- 各个游戏页面 (已更新H1大标题文案) -->
+    <div id="pg1" class="page active"><h1>大家好，这是我的家族树！请点击‘小喇叭’听听他们都是谁吧！</h1><div id="canvas-pg1" class="tree-canvas"></div></div>
+    <div id="pg2" class="page"><h1>你还记得他们都是谁吗？请点击家人图片，看看你记得对吗？</h1><div id="canvas-pg2" class="tree-canvas"></div></div>
     <div id="pg3" class="page">
-        <h2>依次点击卡片，召唤全家</h2>
+        <h1>请点击家人图片，我来带你认识他们。</h1>
         <div id="canvas-pg3" class="tree-canvas"></div>
     </div>
 
     <div id="pg4" class="page">
-        <div class="cam-controls" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 5px;">
+        <div class="cam-controls" style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; margin-bottom: 10px;">
             <video id="video-element" autoplay playsinline style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #E74C3C; object-fit: cover; background: #ddd;"></video>
-            <button onclick="window.takePhoto()" style="font-size:16px; padding:6px 15px; border-radius:10px; border:none; background:#E74C3C; color:white; font-weight:bold; cursor:pointer; box-shadow: 0 4px 0px #C0392B;">📸 拍头像</button>
-            <span style="color:#555; font-size:16px; font-weight:bold;">左侧拖出并组合你的家族树吧！</span>
+            <button onclick="window.takePhoto()" style="font-size:24px; padding:6px 15px; border-radius:10px; border:none; background:#E74C3C; color:white; font-weight:bold; cursor:pointer; box-shadow: 0 4px 0px #C0392B;">📸 拍照</button>
+            <!-- 更新提示文字 -->
+            <span style="color:#555; font-size:24px; font-weight:bold;">你要不要制作一个自己的家族树呢？动手试试吧！</span>
         </div>
         <div id="pg4-workspace">
             <div id="pg4-drag-area"></div>
@@ -238,7 +250,7 @@
     <div id="msg-box">提示信息</div>
 
     <script>
-        // ================= 核心数据区 (硬编码 src 路径) =================
+        // ================= 核心数据区 =================
         const familyData = {
             "爷爷": { emoji: "👴", group: "patGP", generalImg: "img/爷爷.png", generalAudio: "audio/爷爷.mp3", pg3Img: "img_pg3/爷爷.png", pg3Audio: "audio_pg3/爷爷.mp3" }, 
             "奶奶": { emoji: "👵", group: "patGP", generalImg: "img/奶奶.png", generalAudio: "audio/奶奶.mp3", pg3Img: "img_pg3/奶奶.png", pg3Audio: "audio_pg3/奶奶.mp3" },
@@ -264,7 +276,13 @@
             "sys_photo": { label: "拍照完成音", defaultText: "拍照成功", audioPath: "audio_sys/sys_photo.mp3" },
             "sys_save": { label: "保存图片提示", defaultText: "正在生成图片", audioPath: "audio_sys/sys_save.mp3" },
             "sys_error": { label: "超出边界声", defaultText: "错误", audioPath: "audio_sys/sys_error.mp3" },
-            "sys_bgm": { label: "背景音乐", defaultText: "无", audioPath: "audio_sys/bgm.mp3" } 
+            "sys_bgm": { label: "背景音乐", defaultText: "无", audioPath: "audio_sys/bgm.mp3" },
+            
+            // ⭐️ 新增：四个页面的介绍语音数据
+            "intro_pg1": { label: "第一页介绍", defaultText: "大家好，这是我的家族树！请点击小喇叭听听他们都是谁吧！", audioPath: "audio_sys/intro_pg1.mp3" },
+            "intro_pg2": { label: "第二页介绍", defaultText: "你还记得他们都是谁吗？请点击家人图片，看看你记得对吗？", audioPath: "audio_sys/intro_pg2.mp3" },
+            "intro_pg3": { label: "第三页介绍", defaultText: "请点击家人图片，我来带你认识他们。", audioPath: "audio_sys/intro_pg3.mp3" },
+            "intro_pg4": { label: "第四页介绍", defaultText: "你要不要制作一个自己的家族树呢？动手试试吧！", audioPath: "audio_sys/intro_pg4.mp3" }
         };
 
         const pg3Subtitles = {
@@ -285,18 +303,62 @@
 
         let pg4Links = []; let pg4Zoom = 1;
         window.pg3Clicked = new Set(); 
-        window.pg3RevealedGroups = new Set(); 
+        window.pg3RevealedGroups = new Set();
         window.subtitleTimeout = null;
         window.bgmAudio = null;
+        
+        // ⭐️ 新增：记录当前正在播放的介绍语音，方便随时打断
+        window.currentIntroAudio = null;
+
+        // ================= 页面导航控制逻辑 =================
+        const pagesList = ['pg1', 'pg2', 'pg3', 'pg4'];
+        let currentPgIdx = 0;
+
+        window.updateNavUI = () => {
+            document.getElementById('prev-btn').style.visibility = currentPgIdx === 0 ? 'hidden' : 'visible';
+            document.getElementById('next-btn').style.visibility = currentPgIdx === pagesList.length - 1 ? 'hidden' : 'visible';
+        };
+
+        window.prevPage = () => {
+            if (currentPgIdx > 0) window.switchPage(pagesList[currentPgIdx - 1]);
+        };
+
+        window.nextPage = () => {
+            if (currentPgIdx < pagesList.length - 1) window.switchPage(pagesList[currentPgIdx + 1]);
+        };
+
+        window.switchPage = (pageId) => {
+            // ⭐️ 核心逻辑：切换页面时，立刻停止上一页还在播放的介绍语音和 AI TTS 朗读
+            if (window.currentIntroAudio) { 
+                window.currentIntroAudio.pause(); 
+                window.currentIntroAudio.currentTime = 0; 
+            }
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+
+            document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active'); 
+            currentPgIdx = pagesList.indexOf(pageId);
+            window.updateNavUI();
+            
+            // ⭐️ 切换完毕后，自动播放当前页面的介绍语音
+            window.playSound('intro_' + pageId);
+
+            setTimeout(() => { if(pageId === 'pg4') window.drawPg4Lines(); else drawTreeLines(pageId); }, 150);
+        };
 
         // ================= 封面页控制 =================
         window.enterGame = () => {
-            window.playSound("sys_connect"); // 点击开始时播放一声清脆的连接音
+            window.playSound("sys_connect"); 
             let cover = document.getElementById('cover-page');
             cover.style.opacity = '0';
             cover.style.transition = 'opacity 0.5s ease';
-            // 动画结束后将封面彻底隐藏，不影响底下页面的点击
-            setTimeout(() => { cover.style.display = 'none'; }, 500); 
+            setTimeout(() => { 
+                cover.style.display = 'none'; 
+                // ⭐️ 封面消失后，触发第一页的自动语音播放
+                window.playSound('intro_pg1');
+            }, 500); 
         };
 
         // ⭐️ 定义家族连线的严格规则 Map
@@ -307,22 +369,18 @@
             validPairsMap[a].push(b); validPairsMap[b].push(a);
         };
 
-        // 规则 1：“我”和兄弟姐妹、父母连接
         const kids = ["我", "哥哥", "姐姐", "弟弟", "妹妹"];
         kids.forEach(k1 => {
             kids.forEach(k2 => { if(k1!==k2) addValidPair(k1, k2); });
             addValidPair(k1, "爸爸"); addValidPair(k1, "妈妈");
         });
-        // 规则 2：父母之间
         addValidPair("爸爸", "妈妈");
-        // 规则 3：爸爸这边的亲属
         const dadSide = ["爸爸", "伯伯", "叔叔", "姑姑"];
         dadSide.forEach(d1 => {
             dadSide.forEach(d2 => { if(d1!==d2) addValidPair(d1, d2); });
             addValidPair(d1, "爷爷"); addValidPair(d1, "奶奶");
         });
         addValidPair("爷爷", "奶奶");
-        // 规则 4：妈妈这边的亲属
         const momSide = ["妈妈", "舅舅", "阿姨"];
         momSide.forEach(m1 => {
             momSide.forEach(m2 => { if(m1!==m2) addValidPair(m1, m2); });
@@ -428,15 +486,7 @@
             setTimeout(() => { let activePage = document.querySelector('.page.active').id; if (activePage !== 'pg4') drawTreeLines(activePage); }, 150);
         }
 
-        // ================= 操作与发音引擎 =================
-        window.switchPage = (pageId) => {
-            document.querySelectorAll('.page, .nav-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active'); 
-            let targetBtn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick').includes(pageId));
-            if(targetBtn) targetBtn.classList.add('active');
-            setTimeout(() => { if(pageId === 'pg4') window.drawPg4Lines(); else drawTreeLines(pageId); }, 150);
-        };
-
+        // ================= 发音引擎 =================
         window.playSound = (id, e = null, type = 'system', pageId = null) => {
             if (e) e.stopPropagation();
             let path = ''; let fallbackText = '';
@@ -451,6 +501,10 @@
 
             if (path) {
                 let audio = new Audio(path);
+                // ⭐️ 如果是页面介绍语音，将其存入全局变量，以便切换页面时能打断它
+                if (id.startsWith('intro_')) {
+                    window.currentIntroAudio = audio;
+                }
                 audio.play().catch(err => { window.fallbackTTS(fallbackText); });
                 return;
             }
@@ -458,7 +512,12 @@
         };
 
         window.fallbackTTS = (text) => {
-            if ('speechSynthesis' in window) { let msg = new SpeechSynthesisUtterance(text); msg.lang = 'zh-CN'; msg.rate = 0.9; window.speechSynthesis.speak(msg); }
+            if ('speechSynthesis' in window) { 
+                let msg = new SpeechSynthesisUtterance(text); 
+                msg.lang = 'zh-CN'; 
+                msg.rate = 0.9; 
+                window.speechSynthesis.speak(msg); 
+            }
         };
 
         window.showMsg = (text) => {
@@ -486,7 +545,6 @@
                 }, 3000);
             }
 
-            // 1. 立即显示的卡片（点击核心人物，同辈兄弟姐妹立刻出现）
             let immediateReveal = [];
             if (word === "我") immediateReveal.push("哥哥", "姐姐", "弟弟", "妹妹");
             if (word === "爸爸") immediateReveal.push("伯伯", "叔叔", "姑姑");
@@ -501,13 +559,10 @@
             });
             setTimeout(() => drawTreeLines(pageId), 100);
 
-            // 2. 延迟 3 秒显示的卡片（全员点击完毕后，长辈才出现）
             const hasAll = (arr) => arr.every(w => window.pg3Clicked.has(w));
-            
             const checkAndDelayReveal = (requiredGroup, groupKey, targetCards) => {
-                // 如果这一排全部被点击过，且还没有触发过延迟动画
                 if (hasAll(requiredGroup) && !window.pg3RevealedGroups.has(groupKey)) {
-                    window.pg3RevealedGroups.add(groupKey); // 标记为已触发
+                    window.pg3RevealedGroups.add(groupKey);
                     setTimeout(() => {
                         targetCards.forEach(w => {
                             let targetCard = document.getElementById(`${pageId}-card-${w}`);
@@ -516,15 +571,19 @@
                                 targetCard.style.animation = 'popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                             }
                         });
-                        drawTreeLines(pageId); // 动画出现后重绘连线
-                    }, 3000); // 严格等待 3 秒
+                        drawTreeLines(pageId);
+                    }, 3000); 
                 }
             };
 
-            // 按照你的规则：需要这一排所有人（包含核心人物自己）都被点击过，才触发3秒延迟
             checkAndDelayReveal(["我", "哥哥", "姐姐", "弟弟", "妹妹"], "parents", ["爸爸", "妈妈"]);
-            checkAndDelayReveal(["爸爸", "伯伯", "叔叔", "姑姑"], "patGrandparents", ["爷爷", "奶奶"]);
-            checkAndDelayReveal(["妈妈", "舅舅", "阿姨"], "matGrandparents", ["外公", "外婆"]);
+            
+            // 爸爸妈妈及其兄弟姐妹全被点击，统一出现爷爷、奶奶、外公、外婆
+            checkAndDelayReveal(
+                ["爸爸", "妈妈", "伯伯", "叔叔", "姑姑", "舅舅", "阿姨"], 
+                "allGrandparents", 
+                ["爷爷", "奶奶", "外公", "外婆"]
+            );
         };
 
         // ================= 核心：绘制直角折线的家族树 =================
@@ -572,7 +631,7 @@
             svg.innerHTML = svgStr;
         }
 
-        // ================= 第4页特有逻辑与通关解锁 =================
+        // ================= 第4页特有逻辑 =================
         window.zoomPg4 = (delta) => { pg4Zoom += delta; pg4Zoom = Math.max(0.4, Math.min(pg4Zoom, 2)); document.getElementById('canvas-pg4').style.transform = `scale(${pg4Zoom})`; window.drawPg4Lines(); };
         window.getCardByWordPg4 = (word) => document.querySelector(`#canvas-pg4 [data-word="${word}"]`);
         
@@ -599,7 +658,6 @@
                 let closest = null; let minD = Infinity;
                 cards.forEach(c => { let d = window.getDistance(currDrag, c); if(d < minD) { minD = d; closest = c; } });
                 
-                // ⭐ 实时检测靠近目标是否符合家庭逻辑规则
                 if (closest && minD < 250 && window.isValidConnection(currDrag.dataset.word, closest.dataset.word) && !pg4Links.some(l => (l.n1 === currDrag.dataset.word && l.n2 === closest.dataset.word) || (l.n2 === currDrag.dataset.word && l.n1 === closest.dataset.word))) {
                     let c1 = getC(currDrag); let c2 = getC(closest);
                     let midY = (c1.y + c2.y) / 2;
@@ -627,7 +685,6 @@
             if (currDrag.parentElement.id === 'pg4-drag-area') {
                 let cr = canvas.getBoundingClientRect();
                 currDrag.style.position = 'absolute'; 
-                // ⭐ 将放大后的卡片完美吸附在手指导航中心 (150x80)
                 let lX = (e.clientX - cr.left)/pg4Zoom - 150/2; 
                 let lY = (e.clientY - cr.top)/pg4Zoom - 80/2;
                 currDrag.style.left = lX+'px'; currDrag.style.top = lY+'px';
@@ -661,7 +718,6 @@
             
             if (cl && minD < 250) {
                 let tWord = cl.dataset.word;
-                // ⭐ 连线时执行严格家庭关系规则校验
                 if (window.isValidConnection(dWord, tWord)) {
                     if (!pg4Links.some(l => (l.n1 === dWord && l.n2 === tWord) || (l.n1 === tWord && l.n2 === dWord))) {
                         pg4Links.push({n1: dWord, n2: tWord}); window.playSound("sys_connect"); 
@@ -718,6 +774,7 @@
         // Start Boot
         document.getElementById('loader').style.display = 'none';
         refreshTrees(); initCamera();
+        window.updateNavUI();
         setTimeout(() => { drawTreeLines('pg1'); }, 300); 
 
         window.addEventListener('resize', () => {
