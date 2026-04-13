@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>我的家族树互动游戏</title>
+    <title>我的家庭树互动游戏</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* ================= 视觉样式 (CSS) ================= */
         * { box-sizing: border-box; user-select: none; touch-action: manipulation; }
         body {
+            /* 楷体字体族 */
             font-family: 'KaiTi', '楷体', 'STKaiti', '华文楷体', 'Comic Sans MS', 'PingFang SC', 'Microsoft YaHei', sans-serif;
             background-color: #E8F8F5; margin: 0; padding: 0; display: flex; flex-direction: column;
             height: 100vh; overflow: hidden;
         }
         
+        /* 强制所有按钮和输入框继承页面的楷体字体 */
         button, input { font-family: inherit; }
 
         /* 顶部导航栏：左右对齐 */
@@ -24,14 +26,17 @@
             position: relative; height: 70px;
         }
 
+        /* 左侧箭头容器 */
         .nav-arrows { display: flex; gap: 15px; align-items: center; }
 
+        /* 自定义图片箭头按钮 */
         .arrow-btn {
             width: 45px; height: 45px; cursor: pointer;
             transition: transform 0.2s; object-fit: contain;
         }
         .arrow-btn:active { transform: scale(0.9); }
         
+        /* 背景音乐按钮 */
         .bgm-btn { 
             font-size: 18px; font-weight: bold; padding: 6px 14px;
             border: 3px solid white; border-radius: 20px; 
@@ -41,22 +46,32 @@
         .bgm-btn:active { transform: translateY(4px); box-shadow: none; }
         .bgm-btn.active { background-color: #E67E22; border-color: #E67E22; box-shadow: 0 4px 0px #D35400; }
 
+        /* 页面容器 */
         .page { flex: 1; display: none; padding: 10px; overflow-y: auto; overflow-x: auto; text-align: center; position: relative; }
         .page.active { display: block; }
-        h2 { color: #D35400; font-size: 24px; margin: 10px 0; text-shadow: 2px 2px 0px white;}
+        
+        /* ⭐️ 修复标题偏左：增加 min-width: 1100px 与画布同步，保证绝对居中 */
+        h2 { 
+            color: #D35400; font-size: 24px; margin: 10px auto; 
+            text-align: center; text-shadow: 2px 2px 0px white; 
+            width: 100%; min-width: 1100px; 
+        }
 
+        /* --- 核心：树状图画布与网格 --- */
         .tree-canvas {
             position: relative; width: 100%; min-width: 1100px; min-height: 520px;
             display: flex; flex-direction: column; align-items: center; padding-top: 20px;
         }
         .tree-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
         
+        /* 行间距与组间距 */
         .tree-row { display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 100px; z-index: 10; } 
         .tree-group { display: flex; justify-content: center; align-items: center; gap: 20px; margin: 0 10px; min-height: 80px; }
         .tree-spacer { width: 50px; } 
 
         @keyframes popIn { 0% { transform: scale(0.1); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 
+        /* --- 横向大卡片样式 --- */
         .item-card {
             display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
             width: 150px; height: 80px; padding: 10px; gap: 10px;
@@ -65,6 +80,7 @@
             transition: transform 0.3s ease;
         }
         
+        /* 头像容器 */
         .emoji-pic { 
             width: 55px; height: 55px; pointer-events: none; display: flex; justify-content: center; align-items: center; flex-shrink: 0;
         }
@@ -72,6 +88,7 @@
         .custom-img { width: 100%; height: 100%; object-fit: cover; border: 2px solid #EEE; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .fallback-emoji { font-size: 45px; }
 
+        /* 右侧文字与按钮容器 */
         .card-right { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 4px; pointer-events: none;}
         
         .play-btn {
@@ -80,6 +97,7 @@
         }
         .play-btn:active { transform: translateY(2px); box-shadow: none; }
 
+        /* --- 勾勾图标与已点击样式 --- */
         .check-mark {
             position: absolute; top: -10px; right: -10px; width: 28px; height: 28px;
             background-color: #2ECC71; color: white; border-radius: 50%;
@@ -91,6 +109,7 @@
         .item-card.listened { border-color: #2ECC71; }
         .item-card.listened .check-mark { opacity: 1; transform: scale(1); }
 
+        /* --- 闪卡翻转 --- */
         .flashcard { perspective: 1000px; width: 150px; height: 80px; z-index: 10; }
         .flashcard-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; cursor: pointer; }
         .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
@@ -101,6 +120,7 @@
         .flashcard-front { background-color: #FEF9E7; }
         .flashcard-back { background-color: #E8F8F5; transform: rotateY(180deg); font-size: 22px; }
 
+        /* --- 第3页字幕框 --- */
         .subtitle-box {
             position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 15px;
             background-color: rgba(255, 255, 255, 0.95); border: 4px solid #2ECC71;
@@ -111,6 +131,7 @@
         }
         .subtitle-box.show { opacity: 1; }
 
+        /* --- 第四页：自由画板与全新仓库 --- */
         #pg4.active { display: flex; flex-direction: column; }
         #pg4-workspace { display: flex; flex-direction: row; gap: 15px; flex: 1; width: 100%; margin-top: 10px; min-height: 0; position: relative; }
         #canvas-pg4-container {
@@ -120,6 +141,10 @@
         #canvas-pg4 {
             width: 3000px; height: 3000px; background-image: radial-gradient(#BDC3C7 2px, transparent 2px);
             background-size: 30px 30px; position: relative; transform-origin: top left; transition: transform 0.2s ease-out;
+        }
+	/* ⭐️ 当卡片被拖入右侧画板后，专属放大文字 */
+        #canvas-pg4 .draggable .name-label { 
+            font-size: 24px; /* 你可以把 28 改成 30 或 32，调整到你满意的字号 */
         }
         .zoom-controls {
             position: absolute; top: 15px; right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 10px;
@@ -133,38 +158,49 @@
         .zoom-controls .reset-btn { border-color: #E74C3C; color: #E74C3C; box-shadow: 0 3px 0 #E74C3C; margin-top: 5px; border-top: 2px dashed #CCC; padding-top: 10px; }
         .zoom-controls .save-btn { border-color: #3498DB; color: #3498DB; box-shadow: 0 3px 0 #3498DB; margin-top: 5px; }
         
+       /* ⭐️ 终极 iPad 适配版仓库：双列 + 左图右字 + 绝不滚动 */
         #pg4-drag-area {
-            background-color: #FCF3CF; padding: 12px; border-radius: 20px; 
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-content: start;
-            width: 260px; border: 4px dashed #F1C40F; overflow-y: auto; flex-shrink: 0;
+            background-color: #FCF3CF; padding: 10px; border-radius: 20px; 
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; align-content: start;
+            width: 280px; /* 加宽仓库以容纳两张横向卡片 */
+            border: 4px dashed #F1C40F; overflow-y: visible; /* 彻底移除内部滚动条 */
+            flex-shrink: 0;
         }
+        /* 在仓库内部微缩卡片，但严格保持“左图右字”的横排布局 */
         #pg4-drag-area .draggable {
-            width: 100%; height: 60px; padding: 5px; gap: 4px;
+            width: 100%; height: 50px; padding: 5px 8px; gap: 8px;
             border-width: 2px; border-radius: 12px; cursor: grab;
-            flex-direction: column; justify-content: center;
+            flex-direction: row; justify-content: flex-start;
         }
-        #pg4-drag-area .draggable .emoji-pic { width: 30px; height: 30px; margin-bottom: 0; }
+        /* 同比例微缩头像和文字 */
+        #pg4-drag-area .draggable .emoji-pic { width: 34px; height: 34px; margin: 0; }
         #pg4-drag-area .draggable .fallback-emoji { font-size: 24px; }
-        #pg4-drag-area .draggable .name-label { font-size: 14px; }
-        #pg4-drag-area .draggable .play-btn { display: none; }
+        #pg4-drag-area .draggable .name-label { font-size: 24px; margin: 0; }
+        #pg4-drag-area .draggable .play-btn { display: none; } /* 仓库内不显示喇叭 */
         
         .draggable { touch-action: none; cursor: grab; z-index: 100; border-color: #3498DB; }
 
         /* --- 封面页样式 --- */
         #cover-page {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background-image: url('img/cover_bg.png'); 
+            background-image: url('img/cover_bg.png'); /* 全屏背景图路径 */
             background-size: cover; background-position: center; background-repeat: no-repeat;
-            background-color: #E8F8F5; 
+            background-color: #E8F8F5; /* 如果图片没加载出来时的备用背景色 */
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 9000; 
+            z-index: 9000; /* 层级位于加载动画之下，但在导航栏和画板之上 */
         }
-        .cover-logo-left { position: absolute; top: 20px; left: 20px; max-width: 150px; height: auto; }
-        .cover-logo-right { position: absolute; top: 20px; right: 20px; max-width: 150px; height: auto; }
+        /* 更新为relative，并使用包裹层布局左右两端 */
+        .cover-header {
+            position: absolute; top: 0; left: 0; width: 100%; box-sizing: border-box;
+            display: flex; justify-content: space-between; padding: 20px; align-items: flex-start;
+        }
+        .cover-logo-left { position: relative; max-width: 150px; height: auto; }
+        .cover-logo-right { position: relative; max-width: 150px; height: auto; }
+        
         .start-btn {
             position: absolute;
-            top: 75%; 
-            left: 0; right: 0; margin: 0 auto; width: fit-content; 
+            top: 75%; /* 控制上下位置的魔法数字 */
+            left: 0; right: 0; margin: 0 auto; width: fit-content; /* 绝对居中法则 */
             font-family: inherit; font-size: 40px; font-weight: bold; padding: 15px 60px;
             background-color: #E74C3C; color: white; border: 6px solid white; border-radius: 40px;
             cursor: pointer; box-shadow: 0 8px 0px #C0392B, 0 15px 20px rgba(0,0,0,0.3);
@@ -174,7 +210,7 @@
         
         .disclaimer {
             position: absolute; bottom: 15px; width: 100%; text-align: center;
-            font-size: 14px; color: #333; font-family: Arial, sans-serif; 
+            font-size: 14px; color: #333; font-family: Arial, sans-serif; /* 全英文建议使用无衬线字体 */
             text-shadow: 1px 1px 2px rgba(255,255,255,0.8); padding: 0 20px; line-height: 1.4;
         }
 
@@ -190,10 +226,13 @@
 
     <!-- --- 封面页 --- -->
     <div id="cover-page">
-        <!-- 左上角Logo -->
-        <img src="img/logo_left.png" alt="Logo Left" class="cover-logo-left" onerror="this.style.display='none'">
-        <!-- 右上角Logo -->
-        <img src="img/logo_right.png" alt="Logo Right" class="cover-logo-right" onerror="this.style.display='none'">
+        <!-- 包裹层，为了让 relative 属性的 Logo 能左右分布 -->
+        <div class="cover-header">
+            <!-- 左上角Logo -->
+            <img src="img/logo_left.gif" alt="Logo Left" class="cover-logo-left" onerror="this.style.display='none'">
+            <!-- 右上角Logo -->
+            <img src="img/logo_right.png" alt="Logo Right" class="cover-logo-right" onerror="this.style.display='none'">
+        </div>
         
         <!-- 中央开始按钮 -->
         <button class="start-btn" onclick="window.enterGame()">开始</button>
@@ -218,8 +257,8 @@
         <button class="bgm-btn" onclick="window.toggleBGM()">🎵 音乐关</button>
     </div>
 
-    <!-- 各个游戏页面 (已更新H1大标题文案) -->
-    <div id="pg1" class="page active"><h1>大家好，这是我的家族树！请点击‘小喇叭’听听他们都是谁吧！</h1><div id="canvas-pg1" class="tree-canvas"></div></div>
+    <!-- 各个游戏页面 (已更新标题为“家庭树”) -->
+    <div id="pg1" class="page active"><h1>大家好，这是我的家庭树！请点击‘小喇叭’听听他们都是谁吧！</h1><div id="canvas-pg1" class="tree-canvas"></div></div>
     <div id="pg2" class="page"><h1>你还记得他们都是谁吗？请点击家人图片，看看你记得对吗？</h1><div id="canvas-pg2" class="tree-canvas"></div></div>
     <div id="pg3" class="page">
         <h1>请点击家人图片，我来带你认识他们。</h1>
@@ -231,7 +270,7 @@
             <video id="video-element" autoplay playsinline style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #E74C3C; object-fit: cover; background: #ddd;"></video>
             <button onclick="window.takePhoto()" style="font-size:24px; padding:6px 15px; border-radius:10px; border:none; background:#E74C3C; color:white; font-weight:bold; cursor:pointer; box-shadow: 0 4px 0px #C0392B;">📸 拍照</button>
             <!-- 更新提示文字 -->
-            <span style="color:#555; font-size:24px; font-weight:bold;">你要不要制作一个自己的家族树呢？动手试试吧！</span>
+            <span style="color:#555; font-size:24px; font-weight:bold;">你要不要制作一个自己的家庭树呢？动手试试吧！</span>
         </div>
         <div id="pg4-workspace">
             <div id="pg4-drag-area"></div>
@@ -250,19 +289,14 @@
     <div id="msg-box">提示信息</div>
 
     <script>
-        // ================= 核心数据区 =================
+        // ================= 核心数据区 (已移除叔叔、伯伯、姑姑、舅舅、阿姨) =================
         const familyData = {
             "爷爷": { emoji: "👴", group: "patGP", generalImg: "img/爷爷.png", generalAudio: "audio/爷爷.mp3", pg3Img: "img_pg3/爷爷.png", pg3Audio: "audio_pg3/爷爷.mp3" }, 
             "奶奶": { emoji: "👵", group: "patGP", generalImg: "img/奶奶.png", generalAudio: "audio/奶奶.mp3", pg3Img: "img_pg3/奶奶.png", pg3Audio: "audio_pg3/奶奶.mp3" },
             "外公": { emoji: "👴", group: "matGP", generalImg: "img/外公.png", generalAudio: "audio/外公.mp3", pg3Img: "img_pg3/外公.png", pg3Audio: "audio_pg3/外公.mp3" }, 
             "外婆": { emoji: "👵", group: "matGP", generalImg: "img/外婆.png", generalAudio: "audio/外婆.mp3", pg3Img: "img_pg3/外婆.png", pg3Audio: "audio_pg3/外婆.mp3" },
-            "伯伯": { emoji: "👨", group: "patAunts", generalImg: "img/伯伯.png", generalAudio: "audio/伯伯.mp3", pg3Img: "img_pg3/伯伯.png", pg3Audio: "audio_pg3/伯伯.mp3" }, 
-            "叔叔": { emoji: "👨", group: "patAunts", generalImg: "img/叔叔.png", generalAudio: "audio/叔叔.mp3", pg3Img: "img_pg3/叔叔.png", pg3Audio: "audio_pg3/叔叔.mp3" }, 
-            "姑姑": { emoji: "👩", group: "patAunts", generalImg: "img/姑姑.png", generalAudio: "audio/姑姑.mp3", pg3Img: "img_pg3/姑姑.png", pg3Audio: "audio_pg3/姑姑.mp3" },
             "爸爸": { emoji: "👨", group: "parents", generalImg: "img/爸爸.png", generalAudio: "audio/爸爸.mp3", pg3Img: "img_pg3/爸爸.png", pg3Audio: "audio_pg3/爸爸.mp3" }, 
             "妈妈": { emoji: "👩", group: "parents", generalImg: "img/妈妈.png", generalAudio: "audio/妈妈.mp3", pg3Img: "img_pg3/妈妈.png", pg3Audio: "audio_pg3/妈妈.mp3" },
-            "舅舅": { emoji: "👨", group: "matAunts", generalImg: "img/舅舅.png", generalAudio: "audio/舅舅.mp3", pg3Img: "img_pg3/舅舅.png", pg3Audio: "audio_pg3/舅舅.mp3" }, 
-            "阿姨": { emoji: "👩", group: "matAunts", generalImg: "img/阿姨.png", generalAudio: "audio/阿姨.mp3", pg3Img: "img_pg3/阿姨.png", pg3Audio: "audio_pg3/阿姨.mp3" },
             "哥哥": { emoji: "👦", group: "kids", generalImg: "img/哥哥.png", generalAudio: "audio/哥哥.mp3", pg3Img: "img_pg3/哥哥.png", pg3Audio: "audio_pg3/哥哥.mp3" }, 
             "姐姐": { emoji: "👧", group: "kids", generalImg: "img/姐姐.png", generalAudio: "audio/姐姐.mp3", pg3Img: "img_pg3/姐姐.png", pg3Audio: "audio_pg3/姐姐.mp3" }, 
             "我":   { emoji: "🧒", group: "kids", generalImg: "img/我.png",   generalAudio: "audio/我.mp3",   pg3Img: "img_pg3/我.png",   pg3Audio: "audio_pg3/我.mp3" },
@@ -278,23 +312,18 @@
             "sys_error": { label: "超出边界声", defaultText: "错误", audioPath: "audio_sys/sys_error.mp3" },
             "sys_bgm": { label: "背景音乐", defaultText: "无", audioPath: "audio_sys/bgm.mp3" },
             
-            // ⭐️ 新增：四个页面的介绍语音数据
-            "intro_pg1": { label: "第一页介绍", defaultText: "大家好，这是我的家族树！请点击小喇叭听听他们都是谁吧！", audioPath: "audio_sys/intro_pg1.mp3" },
+            // 介绍语音
+            "intro_pg1": { label: "第一页介绍", defaultText: "大家好，这是我的家庭树！请点击小喇叭听听他们都是谁吧！", audioPath: "audio_sys/intro_pg1.mp3" },
             "intro_pg2": { label: "第二页介绍", defaultText: "你还记得他们都是谁吗？请点击家人图片，看看你记得对吗？", audioPath: "audio_sys/intro_pg2.mp3" },
             "intro_pg3": { label: "第三页介绍", defaultText: "请点击家人图片，我来带你认识他们。", audioPath: "audio_sys/intro_pg3.mp3" },
-            "intro_pg4": { label: "第四页介绍", defaultText: "你要不要制作一个自己的家族树呢？动手试试吧！", audioPath: "audio_sys/intro_pg4.mp3" }
+            "intro_pg4": { label: "第四页介绍", defaultText: "你要不要制作一个自己的家庭树呢？动手试试吧！", audioPath: "audio_sys/intro_pg4.mp3" }
         };
 
         const pg3Subtitles = {
             "爷爷": "爸爸的爸爸叫爷爷。",
             "奶奶": "爸爸的妈妈叫奶奶。",
-            "伯伯": "爸爸的哥哥叫伯伯。",
-            "叔叔": "爸爸的弟弟叫叔叔。",
-            "姑姑": "爸爸的姐妹叫姑姑。",
             "外公": "妈妈的爸爸叫外公。",
             "外婆": "妈妈的妈妈叫外婆。",
-            "舅舅": "妈妈的兄弟叫舅舅。",
-            "阿姨": "妈妈的姐妹叫阿姨。",
             "哥哥": "我的哥哥陪我玩。",
             "姐姐": "我的姐姐笑容甜。",
             "弟弟": "我的弟弟跑得快。",
@@ -306,8 +335,6 @@
         window.pg3RevealedGroups = new Set();
         window.subtitleTimeout = null;
         window.bgmAudio = null;
-        
-        // ⭐️ 新增：记录当前正在播放的介绍语音，方便随时打断
         window.currentIntroAudio = null;
 
         // ================= 页面导航控制逻辑 =================
@@ -328,7 +355,6 @@
         };
 
         window.switchPage = (pageId) => {
-            // ⭐️ 核心逻辑：切换页面时，立刻停止上一页还在播放的介绍语音和 AI TTS 朗读
             if (window.currentIntroAudio) { 
                 window.currentIntroAudio.pause(); 
                 window.currentIntroAudio.currentTime = 0; 
@@ -342,7 +368,6 @@
             currentPgIdx = pagesList.indexOf(pageId);
             window.updateNavUI();
             
-            // ⭐️ 切换完毕后，自动播放当前页面的介绍语音
             window.playSound('intro_' + pageId);
 
             setTimeout(() => { if(pageId === 'pg4') window.drawPg4Lines(); else drawTreeLines(pageId); }, 150);
@@ -356,12 +381,11 @@
             cover.style.transition = 'opacity 0.5s ease';
             setTimeout(() => { 
                 cover.style.display = 'none'; 
-                // ⭐️ 封面消失后，触发第一页的自动语音播放
                 window.playSound('intro_pg1');
             }, 500); 
         };
 
-        // ⭐️ 定义家族连线的严格规则 Map
+        // ⭐️ 定义家族连线的严格规则 Map (仅保留直系)
         let validPairsMap = {};
         const addValidPair = (a, b) => {
             if(!validPairsMap[a]) validPairsMap[a] = [];
@@ -375,17 +399,10 @@
             addValidPair(k1, "爸爸"); addValidPair(k1, "妈妈");
         });
         addValidPair("爸爸", "妈妈");
-        const dadSide = ["爸爸", "伯伯", "叔叔", "姑姑"];
-        dadSide.forEach(d1 => {
-            dadSide.forEach(d2 => { if(d1!==d2) addValidPair(d1, d2); });
-            addValidPair(d1, "爷爷"); addValidPair(d1, "奶奶");
-        });
+        addValidPair("爸爸", "爷爷"); addValidPair("爸爸", "奶奶");
         addValidPair("爷爷", "奶奶");
-        const momSide = ["妈妈", "舅舅", "阿姨"];
-        momSide.forEach(m1 => {
-            momSide.forEach(m2 => { if(m1!==m2) addValidPair(m1, m2); });
-            addValidPair(m1, "外公"); addValidPair(m1, "外婆");
-        });
+        
+        addValidPair("妈妈", "外公"); addValidPair("妈妈", "外婆");
         addValidPair("外公", "外婆");
 
         window.isValidConnection = (w1, w2) => {
@@ -463,7 +480,7 @@
                     groupEl.innerHTML += `
                         <div class="flashcard card" id="${pageId}-card-${word}" onclick="this.classList.toggle('flipped')">
                             <div class="flashcard-inner">
-                                <div class="flashcard-front"><div class="emoji-pic">${picHTML}</div><div class="name-label" style="font-size:24px;">?</div></div>
+                                <div class="flashcard-front"><div class="emoji-pic">${picHTML}</div></div>
                                 <div class="flashcard-back"><div class="name-label">${word}</div><button class="play-btn" onclick="window.playSound('${word}', event, 'person', '${pageId}')">🔊</button></div>
                             </div>
                         </div>`;
@@ -501,7 +518,6 @@
 
             if (path) {
                 let audio = new Audio(path);
-                // ⭐️ 如果是页面介绍语音，将其存入全局变量，以便切换页面时能打断它
                 if (id.startsWith('intro_')) {
                     window.currentIntroAudio = audio;
                 }
@@ -547,8 +563,6 @@
 
             let immediateReveal = [];
             if (word === "我") immediateReveal.push("哥哥", "姐姐", "弟弟", "妹妹");
-            if (word === "爸爸") immediateReveal.push("伯伯", "叔叔", "姑姑");
-            if (word === "妈妈") immediateReveal.push("舅舅", "阿姨");
 
             immediateReveal.forEach(w => {
                 let targetCard = document.getElementById(`${pageId}-card-${w}`);
@@ -578,15 +592,15 @@
 
             checkAndDelayReveal(["我", "哥哥", "姐姐", "弟弟", "妹妹"], "parents", ["爸爸", "妈妈"]);
             
-            // 爸爸妈妈及其兄弟姐妹全被点击，统一出现爷爷、奶奶、外公、外婆
+            // 爸爸妈妈全被点击，统一出现爷爷、奶奶、外公、外婆
             checkAndDelayReveal(
-                ["爸爸", "妈妈", "伯伯", "叔叔", "姑姑", "舅舅", "阿姨"], 
+                ["爸爸", "妈妈"], 
                 "allGrandparents", 
                 ["爷爷", "奶奶", "外公", "外婆"]
             );
         };
 
-        // ================= 核心：绘制直角折线的家族树 =================
+        // ================= 核心：绘制直角折线的家庭树 =================
         function drawTreeLines(pagePrefix) {
             const svg = document.getElementById(`svg-${pagePrefix}`); if(!svg) return; 
             let svgStr = ''; 
@@ -624,8 +638,8 @@
                 });
             };
             
-            drawRel('爷爷', '奶奶', ['伯伯', '叔叔', '姑姑', '爸爸'], '#3498DB'); 
-            drawRel('外公', '外婆', ['妈妈', '舅舅', '阿姨'], '#9B59B6');     
+            drawRel('爷爷', '奶奶', ['爸爸'], '#3498DB'); 
+            drawRel('外公', '外婆', ['妈妈'], '#9B59B6');     
             drawRel('爸爸', '妈妈', ['哥哥', '姐姐', '我', '弟弟', '妹妹'], '#2ECC71'); 
             
             svg.innerHTML = svgStr;
@@ -757,7 +771,7 @@
                 try {
                     let dataUrl = canvas.toDataURL('image/png');
                     let link = document.createElement('a'); 
-                    link.download = '我的家族树.png'; 
+                    link.download = '我的家庭树.png'; 
                     link.href = dataUrl;
                     link.click(); 
                     window.showMsg("🖼️ 你的家族树完成了！");
