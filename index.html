@@ -664,7 +664,7 @@
             html2canvas(cArea, { backgroundColor: "#FAFAFA", scale: 2, useCORS: true }).then(canvas => {
                 try {
                     let link = document.createElement('a'); link.download = '我的家庭树.png'; link.href = canvas.toDataURL('image/png'); link.click(); 
-                    window.showMsg("🖼️ 截屏成功，快去相册看看吧！");
+                    window.showMsg("🖼️ 你的家庭树完成了！");
                 } catch (e) { window.showMsg("⚠️ 本地双击打开文件无法截图，请上传到服务器后使用！"); }
             }).catch(err => { window.showMsg("截图生成失败。"); });
         };
