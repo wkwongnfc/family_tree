@@ -167,6 +167,15 @@
         }
         .drop-slot.filled { border-color: transparent; background-color: transparent; }
         
+        /* ⭐️ 汇出图片时专属：将还没有填满的空白虚线框变透明 */
+        .export-mode .drop-slot:not(.filled) { 
+            opacity: 0 !important; 
+        }
+        /* ⭐️ 汇出图片时专属：隐藏背景的小圆点网格，让家庭树更像一张纯净的图片 */
+        #canvas-pg4-container.export-mode #canvas-pg4 {
+            background-image: none !important;
+        }
+        
         /* ⭐️ 当卡片被成功放入虚线槽内后，文字智能放大并强制左右横排 */
         #canvas-pg4 .draggable { 
             margin: 0; 
@@ -306,8 +315,8 @@
             "奶奶": "爸爸的妈妈叫奶奶。",
             "外公": "妈妈的爸爸叫外公。",
             "外婆": "妈妈的妈妈叫外婆。",
-	    "爸爸": "我的爸爸很强壮。",
-	    "妈妈": "我的妈妈很美丽。",
+            "爸爸": "我的爸爸很强壮。",
+            "妈妈": "我的妈妈很美丽。",
             "哥哥": "我的哥哥很聪明。",
             "姐姐": "我的姐姐很漂亮。",
             "弟弟": "我的弟弟很有趣。",
@@ -520,7 +529,17 @@
             };
             const getCard = (word) => { 
                 let el = document.getElementById(`${pagePrefix}-card-${word}`) || document.getElementById(`${pagePrefix}-slot-${word}`); 
-                return (el && el.style.display !== 'none') ? el : null; 
+                if (!el || el.style.display === 'none') return null;
+                
+                // ⭐️ 核心：在导出图片时，如果卡槽是空的，就当它不存在，不给它画线！
+                if (pagePrefix === 'pg4' && el.classList.contains('drop-slot')) {
+                    let container = document.getElementById('canvas-pg4-container');
+                    if (container && container.classList.contains('export-mode') && !el.classList.contains('filled')) {
+                        return null; 
+                    }
+                }
+                
+                return el; 
             };
             
             const drawRel = (p1, p2, childList, color) => {
@@ -658,15 +677,34 @@
             refreshTrees(); window.playSound("sys_photo");
         };
 
+        // ⭐️ 全新逻辑：导出专属，动态剥离没填入卡片的连接线
         window.saveTreeImage = () => {
             window.playSound("sys_save");
             let cArea = document.getElementById('canvas-pg4-container'); 
-            html2canvas(cArea, { backgroundColor: "#FAFAFA", scale: 2, useCORS: true }).then(canvas => {
-                try {
-                    let link = document.createElement('a'); link.download = '我的家庭树.png'; link.href = canvas.toDataURL('image/png'); link.click(); 
-                    window.showMsg("🖼️ 你的家庭树完成了！");
-                } catch (e) { window.showMsg("⚠️ 本地双击打开文件无法截图，请上传到服务器后使用！"); }
-            }).catch(err => { window.showMsg("截图生成失败。"); });
+            
+            // 1. 在截图前加上专属 class，隐藏空白虚线框和背景点
+            cArea.classList.add('export-mode');
+            
+            // 2. 重新画线！画线系统会智能忽略没有卡片的空位，不画多余的线
+            drawTreeLines('pg4'); 
+
+            // 3. 等待 150 毫秒让画面完成“去空位和去线”的重绘，然后再截屏
+            setTimeout(() => {
+                html2canvas(cArea, { backgroundColor: "#FAFAFA", scale: 2, useCORS: true }).then(canvas => {
+                    // 4. 截图完成，立刻脱下 export-mode 的外衣，恢复完整骨架，不影响继续玩
+                    cArea.classList.remove('export-mode'); 
+                    drawTreeLines('pg4'); // 画线恢复原状
+
+                    try {
+                        let link = document.createElement('a'); link.download = '我的家庭树.png'; link.href = canvas.toDataURL('image/png'); link.click(); 
+                        window.showMsg("🖼️ 你的家庭树完成了！");
+                    } catch (e) { window.showMsg("⚠️ 本地双击打开文件无法截图，请上传到服务器后使用！"); }
+                }).catch(err => { 
+                    cArea.classList.remove('export-mode'); 
+                    drawTreeLines('pg4'); // 发生错误也要记得恢复原状
+                    window.showMsg("截图生成失败。"); 
+                });
+            }, 150);
         };
 
         async function initCamera() { try { document.getElementById('video-element').srcObject = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }); } catch(err){} }
