@@ -16,21 +16,26 @@
         
         button, input { font-family: inherit; }
 
-        /* 顶部导航栏：左右对齐 */
+        /* 顶部导航栏（仅留音乐按钮，靠右对齐） */
         .nav-bar {
             background-color: #A9DFBF; padding: 10px 20px; 
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: flex-end; align-items: center;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 100;
             position: relative; height: 70px;
         }
-
-        .nav-arrows { display: flex; gap: 15px; align-items: center; }
-
-        .arrow-btn {
-            width: 45px; height: 45px; cursor: pointer;
-            transition: transform 0.2s; object-fit: contain;
+        
+        /* ⭐️ 底部悬浮图片箭头导航栏 */
+        .bottom-nav-arrows {
+            position: fixed; bottom: 20px; left: 0; width: 100%;
+            display: flex; justify-content: space-between; padding: 0 30px;
+            pointer-events: none; z-index: 1000;
         }
-        .arrow-btn:active { transform: scale(0.9); }
+        .bottom-nav-arrows .arrow-btn {
+            pointer-events: auto; width: 60px; height: 60px; cursor: pointer;
+            transition: transform 0.2s; object-fit: contain;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+        }
+        .bottom-nav-arrows .arrow-btn:active { transform: scale(0.9); }
         
         .bgm-btn { 
             font-size: 18px; font-weight: bold; padding: 6px 14px;
@@ -82,9 +87,11 @@
 
         .card-right { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 4px; pointer-events: none;}
         
+        /* ⭐️ 放大喇叭图标 */
         .play-btn {
-            background-color: #E67E22; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 14px; cursor: pointer;
-            box-shadow: 0 2px 0px #D35400; display: flex; align-items: center; justify-content: center; z-index: 20; pointer-events: auto;
+            background-color: #E67E22; color: white; border: none; border-radius: 50%; 
+            width: 36px; height: 36px; font-size: 18px; cursor: pointer;
+            box-shadow: 0 3px 0px #D35400; display: flex; align-items: center; justify-content: center; z-index: 20; pointer-events: auto;
         }
         .play-btn:active { transform: translateY(2px); box-shadow: none; }
 
@@ -126,6 +133,12 @@
             flex: 1; height: 100%; min-height: unset; background-color: #FAFAFA; border: 4px solid #2ECC71; border-radius: 20px; 
             box-shadow: inset 0 0 20px rgba(0,0,0,0.05); padding: 0; overflow: auto; position: relative;
         }
+        /* ⭐️ 画布固定，无需无限大 */
+        #canvas-pg4 {
+            width: 100%; height: 100%; min-width: 1100px; min-height: 520px;
+            background-image: radial-gradient(#BDC3C7 2px, transparent 2px);
+            background-size: 30px 30px; position: relative;
+        }
         
         .zoom-controls {
             position: absolute; top: 15px; right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 10px;
@@ -139,12 +152,15 @@
         .zoom-controls .reset-btn { border-color: #E74C3C; color: #E74C3C; box-shadow: 0 3px 0 #E74C3C; margin-top: 5px; }
         .zoom-controls .save-btn { border-color: #3498DB; color: #3498DB; box-shadow: 0 3px 0 #3498DB; margin-top: 5px; }
         
-        /* ⭐️ iPad 适配版仓库：双列 + 左图右字 + 绝不滚动 */
+        /* iPad 适配版仓库：双列 + 左图右字 + 绝不滚动 */
         #pg4-drag-area {
             background-color: #FCF3CF; padding: 10px; border-radius: 20px; 
             display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; align-content: start;
             width: 280px; border: 4px dashed #F1C40F; overflow-y: visible; flex-shrink: 0;
         }
+        /* ⭐️ 仓库卡片的占位符：抽走后依然留白，不打乱阵型 */
+        .drag-placeholder { width: 100%; height: 50px; }
+
         #pg4-drag-area .draggable {
             width: 100%; height: 50px; padding: 5px 8px; gap: 8px;
             border-width: 2px; border-radius: 12px; cursor: grab;
@@ -157,7 +173,7 @@
         
         .draggable { touch-action: none; cursor: grab; z-index: 100; border-color: #3498DB; }
 
-        /* ⭐️ 虚线空位模板样式 */
+        /* 虚线空位模板样式 */
         .drop-slot {
             width: 150px; height: 80px; padding: 0;
             border: 4px dashed #BDC3C7; border-radius: 20px;
@@ -167,27 +183,13 @@
         }
         .drop-slot.filled { border-color: transparent; background-color: transparent; }
         
-        /* ⭐️ 汇出图片时专属：将还没有填满的空白虚线框变透明 */
-        .export-mode .drop-slot:not(.filled) { 
-            opacity: 0 !important; 
-        }
-        /* ⭐️ 汇出图片时专属：隐藏背景的小圆点网格，让家庭树更像一张纯净的图片 */
-        #canvas-pg4-container.export-mode #canvas-pg4 {
-            background-image: none !important;
-        }
+        /* 汇出图片时专属：将还没有填满的空白虚线框变透明 */
+        .export-mode .drop-slot:not(.filled) { opacity: 0 !important; }
+        .export-mode #canvas-pg4 { background-image: none !important; }
         
-        /* ⭐️ 当卡片被成功放入虚线槽内后，文字智能放大并强制左右横排 */
-        #canvas-pg4 .draggable { 
-            margin: 0; 
-            padding: 5px 10px; 
-            gap: 5px; 
-            flex-direction: row; 
-        }
-        #canvas-pg4 .draggable .name-label { 
-            font-size: 26px; 
-            white-space: nowrap; 
-            margin: 0;
-        }
+        /* 当卡片被成功放入虚线槽内后，文字智能放大并强制左右横排 */
+        #canvas-pg4 .draggable { margin: 0; padding: 5px 10px; gap: 5px; flex-direction: row; }
+        #canvas-pg4 .draggable .name-label { font-size: 26px; white-space: nowrap; margin: 0; }
 
         /* --- 封面页样式 --- */
         #cover-page {
@@ -244,12 +246,8 @@
         </div>
     </div>
 
-    <!-- 全新图片箭头导航栏 -->
+    <!-- 顶栏仅保留音乐按钮 -->
     <div class="nav-bar">
-        <div class="nav-arrows">
-            <img src="img/prev_arrow.png" id="prev-btn" class="arrow-btn" onclick="window.prevPage()" alt="上一页" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23F5CBA7%22/><path d=%22M60 25 L35 50 L60 75%22 stroke=%22white%22 stroke-width=%228%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>'">
-            <img src="img/next_arrow.png" id="next-btn" class="arrow-btn" onclick="window.nextPage()" alt="下一页" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23F5CBA7%22/><path d=%22M40 25 L65 50 L40 75%22 stroke=%22white%22 stroke-width=%228%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>'">
-        </div>
         <button class="bgm-btn" onclick="window.toggleBGM()">🎵 音乐关</button>
     </div>
 
@@ -264,7 +262,7 @@
         <div class="cam-controls" style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; margin-bottom: 10px;">
             <video id="video-element" autoplay playsinline style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #E74C3C; object-fit: cover; background: #ddd;"></video>
             <button onclick="window.takePhoto()" style="font-size:24px; padding:6px 15px; border-radius:10px; border:none; background:#E74C3C; color:white; font-weight:bold; cursor:pointer; box-shadow: 0 4px 0px #C0392B;">📸 拍照</button>
-            <span style="color:#555; font-size:24px; font-weight:bold;">你要不要制作一个自己的家庭树呢？动手试试吧！</span>
+            <span style="color:#555; font-size:24px; font-weight:bold;">你家里有什么成员？动手制作一个自己的家庭树吧!</span>
         </div>
         <div id="pg4-workspace">
             <div id="pg4-drag-area"></div>
@@ -276,6 +274,12 @@
                 <button class="save-btn" onclick="window.saveTreeImage()">💾 保存图片</button>
             </div>
         </div>
+    </div>
+
+    <!-- ⭐️ 底部悬浮的图片翻页按钮 -->
+    <div class="bottom-nav-arrows">
+        <img src="img/prev_arrow.png" id="prev-btn" class="arrow-btn" onclick="window.prevPage()" alt="上一页" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23F5CBA7%22/><path d=%22M60 25 L35 50 L60 75%22 stroke=%22white%22 stroke-width=%228%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>'">
+        <img src="img/next_arrow.png" id="next-btn" class="arrow-btn" onclick="window.nextPage()" alt="下一页" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23F5CBA7%22/><path d=%22M40 25 L65 50 L40 75%22 stroke=%22white%22 stroke-width=%228%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>'">
     </div>
 
     <div id="msg-box">提示信息</div>
@@ -311,10 +315,10 @@
         };
 
         const pg3Subtitles = {
-            "爷爷": "爸爸的爸爸叫爷爷。",
-            "奶奶": "爸爸的妈妈叫奶奶。",
-            "外公": "妈妈的爸爸叫外公。",
-            "外婆": "妈妈的妈妈叫外婆。",
+            "爷爷": "我的爷爷很慈祥。",
+            "奶奶": "我的奶奶很温柔。",
+            "外公": "我的外公很爱笑。",
+            "外婆": "我的外婆很亲切。",
             "爸爸": "我的爸爸很强壮。",
             "妈妈": "我的妈妈很美丽。",
             "哥哥": "我的哥哥很聪明。",
@@ -328,6 +332,7 @@
         window.subtitleTimeout = null;
         window.bgmAudio = null;
         window.currentIntroAudio = null;
+        window.isAudioPlaying = false; // ⭐️ 全局语音播放锁
 
         // ================= 页面导航控制 =================
         const pagesList = ['pg1', 'pg2', 'pg3', 'pg4'];
@@ -344,6 +349,7 @@
         window.switchPage = (pageId) => {
             if (window.currentIntroAudio) { window.currentIntroAudio.pause(); window.currentIntroAudio.currentTime = 0; }
             if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); }
+            window.isAudioPlaying = false; // 强行切页时重置播放锁
 
             document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
             document.getElementById(pageId).classList.add('active'); 
@@ -387,6 +393,16 @@
             return `<div class="fallback-emoji">${info.emoji}</div>`;
         }
 
+        // ⭐️ 第二页：翻牌并且直接播放发音
+        window.flipAndPlay = (word, pageId, el) => {
+            let isFlipped = el.classList.contains('flipped');
+            el.classList.toggle('flipped');
+            if (!isFlipped) {
+                // 如果是从正面翻到背面，立刻播放对应人的声音
+                window.playSound(word, null, 'person', pageId);
+            }
+        };
+
         function buildTreeLayout(pageId, mode) {
             const container = document.getElementById(`canvas-${pageId}`);
             
@@ -406,9 +422,11 @@
                 let dragArea = document.getElementById('pg4-drag-area'); dragArea.innerHTML = '';
                 for (let word in familyData) {
                     dragArea.innerHTML += `
-                        <div class="item-card draggable pg4-card-${word}" data-word="${word}" onpointerdown="window.startDrag(event)">
-                            <div class="emoji-pic">${getPicHTML(word, pageId)}</div>
-                            <div class="card-right"><div class="name-label">${word}</div></div>
+                        <div class="drag-placeholder" id="placeholder-${word}">
+                            <div class="item-card draggable pg4-card-${word}" data-word="${word}" onpointerdown="window.startDrag(event)">
+                                <div class="emoji-pic">${getPicHTML(word, pageId)}</div>
+                                <div class="card-right"><div class="name-label">${word}</div></div>
+                            </div>
                         </div>`;
                 }
                 setTimeout(() => { drawTreeLines('pg4'); }, 100);
@@ -426,15 +444,17 @@
                 let info = familyData[word]; let groupEl = document.getElementById(`${pageId}-${info.group}`); 
                 let picHTML = getPicHTML(word, pageId);
                 let rightHTML = `<div class="card-right"><div class="name-label">${word}</div><button class="play-btn" onclick="window.playSound('${word}', event, 'person', '${pageId}')">🔊</button></div>`;
+                let rightHTMLNoBtn = `<div class="card-right"><div class="name-label">${word}</div></div>`;
 
                 if (mode === 'normal') {
                     groupEl.innerHTML += `<div class="item-card card" id="${pageId}-card-${word}"><div class="emoji-pic">${picHTML}</div>${rightHTML}</div>`;
                 } else if (mode === 'flashcard') {
+                    // ⭐️ 修改此处以支持点击翻牌播放，并去掉小喇叭
                     groupEl.innerHTML += `
-                        <div class="flashcard card" id="${pageId}-card-${word}" onclick="this.classList.toggle('flipped')">
+                        <div class="flashcard card" id="${pageId}-card-${word}" onclick="window.flipAndPlay('${word}', '${pageId}', this)">
                             <div class="flashcard-inner">
                                 <div class="flashcard-front"><div class="emoji-pic">${picHTML}</div></div>
-                                <div class="flashcard-back"><div class="name-label">${word}</div><button class="play-btn" onclick="window.playSound('${word}', event, 'person', '${pageId}')">🔊</button></div>
+                                <div class="flashcard-back"><div class="name-label">${word}</div></div>
                             </div>
                         </div>`;
                 } else if (mode === 'expandable') {
@@ -444,7 +464,7 @@
                         <div class="item-card card" id="${pageId}-card-${word}" onclick="window.handlePg3Click('${word}', '${pageId}', event)" style="${isInitial ? '' : 'display:none;'} cursor:pointer;">
                             <div class="check-mark">✓</div>
                             <div class="emoji-pic">${picHTML}</div>
-                            ${rightHTML}
+                            ${rightHTMLNoBtn}
                             ${subtitleNode}
                         </div>`;
                 }
@@ -457,29 +477,55 @@
         }
 
         window.playSound = (id, e = null, type = 'system', pageId = null) => {
-            if (e) e.stopPropagation();
+            if (e) e.stopPropagation(); // 阻止喇叭点击事件冒泡到卡片翻转
             let path = ''; let fallbackText = '';
             if (type === 'person') { path = (pageId === 'pg3') ? familyData[id].pg3Audio : familyData[id].generalAudio; fallbackText = id; } 
             else { path = systemAudioData[id].audioPath; fallbackText = systemAudioData[id].defaultText; }
 
+            // ⭐️ 第三页的人名点击加锁，防止多重点击重叠
+            if (pageId === 'pg3' && type === 'person') { window.isAudioPlaying = true; }
+
+            const unlock = () => { window.isAudioPlaying = false; };
+
             if (path) {
                 let audio = new Audio(path);
                 if (id.startsWith('intro_')) { window.currentIntroAudio = audio; }
-                audio.play().catch(err => { window.fallbackTTS(fallbackText); });
+                audio.onended = unlock; // 音频自然结束解锁
+                
+                // ⭐️ 核心修复：防止因缺失 mp3 文件导致触发两次 AI 语音的“防抖锁”
+                let fallbackTriggered = false;
+                const triggerFallback = () => {
+                    if (!fallbackTriggered) {
+                        fallbackTriggered = true;
+                        window.fallbackTTS(fallbackText, unlock);
+                    }
+                };
+
+                audio.onerror = triggerFallback;
+                audio.play().catch(triggerFallback);
                 return;
             }
-            window.fallbackTTS(fallbackText);
+            window.fallbackTTS(fallbackText, unlock);
         };
 
-        window.fallbackTTS = (text) => {
-            if ('speechSynthesis' in window) { let msg = new SpeechSynthesisUtterance(text); msg.lang = 'zh-CN'; msg.rate = 0.9; window.speechSynthesis.speak(msg); }
+        window.fallbackTTS = (text, unlockCb) => {
+            if ('speechSynthesis' in window) { 
+                let msg = new SpeechSynthesisUtterance(text); 
+                msg.lang = 'zh-CN'; msg.rate = 0.9; 
+                if(unlockCb) { msg.onend = unlockCb; msg.onerror = unlockCb; }
+                window.speechSynthesis.speak(msg); 
+            } else {
+                if(unlockCb) unlockCb();
+            }
         };
 
         window.showMsg = (text) => { let box = document.getElementById('msg-box'); box.innerText = text; box.style.display = 'block'; setTimeout(() => box.style.display = 'none', 2000); };
 
         // ================= 第3页点击逻辑 =================
         window.handlePg3Click = (word, pageId, event) => {
+            if (window.isAudioPlaying) return; // ⭐️ 第三页：上一段语音还在播放时锁定点击
             if (event.target.classList.contains('play-btn')) return; 
+            
             let card = document.getElementById(`${pageId}-card-${word}`);
             if(!card || card.style.display === 'none') return;
             
@@ -531,14 +577,12 @@
                 let el = document.getElementById(`${pagePrefix}-card-${word}`) || document.getElementById(`${pagePrefix}-slot-${word}`); 
                 if (!el || el.style.display === 'none') return null;
                 
-                // ⭐️ 核心：在导出图片时，如果卡槽是空的，就当它不存在，不给它画线！
                 if (pagePrefix === 'pg4' && el.classList.contains('drop-slot')) {
                     let container = document.getElementById('canvas-pg4-container');
                     if (container && container.classList.contains('export-mode') && !el.classList.contains('filled')) {
                         return null; 
                     }
                 }
-                
                 return el; 
             };
             
@@ -571,7 +615,7 @@
             svg.innerHTML = svgStr;
         }
 
-        // ================= ⭐️ 第四页吸附式拖拽逻辑 =================
+        // ================= ⭐️ 第四页：吸附式拖拽与固定占位 =================
         let currDrag = null, sX = 0, sY = 0;
         
         window.startDrag = (e) => {
@@ -621,29 +665,28 @@
             let targetSlot = document.getElementById(`pg4-slot-${dWord}`);
             let dropped = false;
             
-            if (targetSlot) {
-                let slotRect = targetSlot.getBoundingClientRect();
-                let cardRect = currDrag.getBoundingClientRect();
-                
-                let cardCX = cardRect.left + cardRect.width/2;
-                let cardCY = cardRect.top + cardRect.height/2;
-                let slotCX = slotRect.left + slotRect.width/2;
-                let slotCY = slotRect.top + slotRect.height/2;
-                
-                if (Math.hypot(cardCX - slotCX, cardCY - slotCY) < 120) { dropped = true; }
+            // ⭐️ 全新逻辑：只要丢到右侧画板范围内，立刻自动黏住格子！
+            let pR = document.getElementById('canvas-pg4-container').getBoundingClientRect();
+            let cR = currDrag.getBoundingClientRect();
+            
+            // 判断卡片是否有任何部分重叠进入了右侧画板区域
+            if (!(cR.bottom < pR.top || cR.top > pR.bottom || cR.right < pR.left || cR.left > pR.right)) {
+                dropped = true; 
             }
             
             currDrag.style.position = 'relative';
             currDrag.style.left = 'auto';
             currDrag.style.top = 'auto';
             
-            if (dropped) {
+            if (dropped && targetSlot) {
                 targetSlot.innerHTML = ''; 
                 targetSlot.appendChild(currDrag); 
                 targetSlot.classList.add('filled'); 
                 window.playSound("sys_connect");
             } else {
-                document.getElementById('pg4-drag-area').appendChild(currDrag);
+                // 放错了，或者放在了仓库区，就退回它原本的固定坑位！
+                let ph = document.getElementById(`placeholder-${dWord}`);
+                if (ph) ph.appendChild(currDrag);
                 window.playSound("sys_error");
                 window.showMsg("加油，再试一次！");
             }
@@ -659,15 +702,17 @@
         };
 
         window.resetPg4 = () => {
-            let dragArea = document.getElementById('pg4-drag-area');
             Array.from(document.querySelectorAll('#canvas-pg4 .draggable')).forEach(card => {
-                card.style.position = 'relative'; card.style.left = 'auto'; card.style.top = 'auto'; dragArea.appendChild(card);
+                card.style.position = 'relative'; card.style.left = 'auto'; card.style.top = 'auto'; 
+                let ph = document.getElementById(`placeholder-${card.dataset.word}`);
+                if (ph) ph.appendChild(card);
             });
             document.querySelectorAll('.drop-slot').forEach(slot => {
                 slot.classList.remove('filled');
                 slot.innerHTML = `<span style="color:#aaa; font-weight:bold; font-size:24px;">${slot.dataset.role}</span>`;
             });
             window.playSound("sys_disconnect");
+            drawTreeLines('pg4');
         };
 
         window.takePhoto = () => {
@@ -677,32 +722,22 @@
             refreshTrees(); window.playSound("sys_photo");
         };
 
-        // ⭐️ 全新逻辑：导出专属，动态剥离没填入卡片的连接线
         window.saveTreeImage = () => {
             window.playSound("sys_save");
             let cArea = document.getElementById('canvas-pg4-container'); 
-            
-            // 1. 在截图前加上专属 class，隐藏空白虚线框和背景点
             cArea.classList.add('export-mode');
-            
-            // 2. 重新画线！画线系统会智能忽略没有卡片的空位，不画多余的线
             drawTreeLines('pg4'); 
 
-            // 3. 等待 150 毫秒让画面完成“去空位和去线”的重绘，然后再截屏
             setTimeout(() => {
                 html2canvas(cArea, { backgroundColor: "#FAFAFA", scale: 2, useCORS: true }).then(canvas => {
-                    // 4. 截图完成，立刻脱下 export-mode 的外衣，恢复完整骨架，不影响继续玩
                     cArea.classList.remove('export-mode'); 
-                    drawTreeLines('pg4'); // 画线恢复原状
-
+                    drawTreeLines('pg4'); 
                     try {
                         let link = document.createElement('a'); link.download = '我的家庭树.png'; link.href = canvas.toDataURL('image/png'); link.click(); 
                         window.showMsg("🖼️ 你的家庭树完成了！");
                     } catch (e) { window.showMsg("⚠️ 本地双击打开文件无法截图，请上传到服务器后使用！"); }
                 }).catch(err => { 
-                    cArea.classList.remove('export-mode'); 
-                    drawTreeLines('pg4'); // 发生错误也要记得恢复原状
-                    window.showMsg("截图生成失败。"); 
+                    cArea.classList.remove('export-mode'); drawTreeLines('pg4'); window.showMsg("截图生成失败。"); 
                 });
             }, 150);
         };
